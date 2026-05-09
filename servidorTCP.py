@@ -151,30 +151,10 @@ def recibir():
         nombre = texto_partes[2].strip(":")
         if usuario_repetido(cliente, nombre):
             continue
-        # Moviendo la lógica del MFA directamente al servidor
-        cliente.send("MFA_CORREO".encode(CODEC))
-        correo = cliente.recv(1024).decode(CODEC).strip()
-        log.info(f"Correo recibido de {nombre}: {correo}")
-
-        if not Mfa.enviar_codigo(correo):
-            log.error(f"No se pudo enviar código MFA a {correo}")
-            cliente.send("MFA_ERROR".encode(CODEC))
-            cliente.close()
-            continue
-
-        cliente.send("MFA_CODIGO".encode(CODEC))
-        codigo_ingresado = cliente.recv(1024).decode(CODEC).strip()
-        log.debug(f"Código recibido de {nombre}: {codigo_ingresado}")
-
-        exito, motivo = Mfa.verificar_codigo(correo, codigo_ingresado)
-        if not exito:
-            log.warning(f"MFA fallido para {nombre}: {motivo}")
-            cliente.send(f"MFA_FALLO:{motivo}".encode(CODEC))
-            cliente.close()
-            continue
-
-        log.info(f"MFA exitoso para {nombre}")
-        #éxito
+        #Si se quiere saltar lo del MFA, quitar estas tres Líneas o ponerlas como comentario
+        #if not verificar_mfa(cliente, nombre):
+        #    cliente.close()
+        #    continue
 
         nombres.append(nombre)
         clientes.append(cliente)
@@ -187,7 +167,29 @@ def recibir():
             usuariosActivos += 1
         hilo.start()
 
+def verificar_mfa(cliente, nombre):
 
+    cliente.send("MFA_CORREO".encode(CODEC))
+    correo = cliente.recv(1024).decode(CODEC).strip()
+    log.info(f"Correo recibido de {nombre}: {correo}")
+
+    if not Mfa.enviar_codigo(correo):
+        log.error(f"No se pudo enviar código MFA a {correo}")
+        cliente.send("MFA_ERROR".encode(CODEC))
+        return False
+
+    cliente.send("MFA_CODIGO".encode(CODEC))
+    codigo_ingresado = cliente.recv(1024).decode(CODEC).strip()
+    log.debug(f"Código recibido de {nombre}: {codigo_ingresado}")
+
+    exito, motivo = Mfa.verificar_codigo(correo, codigo_ingresado)
+    if not exito:
+        log.warning(f"MFA fallido para {nombre}: {motivo}")
+        cliente.send(f"MFA_FALLO:{motivo}".encode(CODEC))
+        return False
+
+    log.info(f"MFA exitoso para {nombre}")
+    return True
 
 """
 Busca si nombre un nombre ya existe en el registro de nombres
