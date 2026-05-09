@@ -47,7 +47,7 @@ class ClienteChat:
         except Exception as e:
             print(f"Error al iniciar cliente: {e}")
             return False
-
+        
     def _iniciar_tcp(self):
         """
         Establece una conexión TCP y realiza el handshake para validar el nombre.
@@ -66,15 +66,46 @@ class ClienteChat:
                 # Para que el servidor pueda extraer el nombre, simulamos ese formato.
                 mensaje_nombre = f"dummy dummy {self.nombre}:"
                 self.socket.sendall(mensaje_nombre.encode(self.codigo))
-
                 # Esperamos la respuesta del servidor para saber si el nombre fue aceptado.
-                respuesta_servidor = self.socket.recv(1024).decode(self.codigo)
-                if "nombre en uso" in respuesta_servidor.lower():
+                respuesta = self.socket.recv(1024).decode(self.codigo)
+                if "nombre en uso" in respuesta.lower():
                     self.socket.close()
-                    # Lanzamos una excepción para que sea capturada y mostrada al usuario.
-                    raise ConnectionRefusedError(respuesta_servidor)
+                     # Lanzamos una excepción para que sea capturada y mostrada al usuario.
+                    raise ConnectionRefusedError(respuesta)
+
+                # Logica nueva del MFA, ahora el servidor es el que pide el MFA
+                if respuesta == "MFA_CORREO":
+                    correo = self._pedir_correo()
+                    self.socket.sendall(correo.encode(self.codigo))
+
+                    instruccion = self.socket.recv(1024).decode(self.codigo)
+
+                    if instruccion == "MFA_ERROR":
+                        self.socket.close()
+                        raise ConnectionRefusedError("No se pudo enviar el código MFA.")
+
+                    if instruccion == "MFA_CODIGO":
+                        codigo = self._pedir_codigo()
+                        self.socket.sendall(codigo.encode(self.codigo))
+
+                        resultado = self.socket.recv(1024).decode(self.codigo)
+                        if resultado.startswith("MFA_FALLO"):
+                            motivo = resultado.split(":")[1] if ":" in resultado else "desconocido"
+                            self.socket.close()
+                            raise ConnectionRefusedError(f"Código MFA inválido: {motivo}")
         except ConnectionRefusedError:
-            raise # Re-lanzamos solo si el nombre está en uso
+            raise
+    #Pantalla de correo       
+    def _pedir_correo(self):
+        import tkinter.simpledialog as sd
+        correo = sd.askstring("Verificación MFA", "Ingresa tu correo para recibir el código:")
+        return correo.strip() if correo else ""
+    #Pantalla de código 
+    def _pedir_codigo(self):
+        import tkinter.simpledialog as sd
+        codigo = sd.askstring("Verificación MFA", "Ingresa el código que llegó a tu correo:")
+        return codigo.strip() if codigo else ""
+    
     def enviar(self, mensaje):
         """
         Envía un mensaje al servidor usando el protocolo correspondiente.
@@ -129,12 +160,18 @@ class VentanaChat:
         self.ip = ip
         self.puerto = puerto
         self.nombre = nombre
-
+        self.cliente = ClienteChat(ip, puerto)
+        if not self.cliente.iniciar(nombre):
+            messagebox.showerror("Error", "No se pudo conectar al servidor")
+            return
         self.crear_ventana()
         self.configurar_interfaz()
-
-        if not self.iniciar_cliente():
-            return
+        self.mostrar_mensaje_sistema(f"Conectado a {ip}:{puerto}")
+        threading.Thread(
+            target=self.cliente.bucle_recibir,
+            args=(self.manejar_mensaje_entrante,),
+            daemon=True
+        ).start()
 
     def crear_ventana(self):
         """

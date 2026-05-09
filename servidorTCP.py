@@ -17,6 +17,16 @@ import threading
 import socket
 import queue
 import utilerias as util
+import Mfa
+import logging
+
+#Otro Logger para debuggear en python....
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="[%(asctime)s] %(levelname)s (servidorTCP.py) - %(message)s",
+    datefmt="%H:%M:%S"
+)
+log = logging.getLogger(__name__)
 """Configura el servidor mediante un socket
 servidor = socket.socket(socket.AF_INET, socket.SOCK_STREAM) #El servidor es un socket TCP (SOCK_STREAM) IPv4 (AF_INET)
 servidor.bind(("127.0.0.1", 51225)) #Se conecta: IP (localhost en este caso), puerto (51225 por el 05/12/25). Parámetro de tupla
@@ -46,7 +56,7 @@ codigo: variable encargada de definir el tipo de decodificador
 """
 clientes = []
 nombres = []
-codigo = "UTF-8"
+CODEC = "UTF-8"
 
 """
 Variable controladora de clientes activos en simultaneo
@@ -93,7 +103,7 @@ def manejar(cliente):
             mensaje = cliente.recv(1024) #El mensaje lo recibirá del cliente 
             
             #logica para mensajes privados
-            mensaje_str = mensaje.decode(codigo) #ya lo decodifique
+            mensaje_str = mensaje.decode(CODEC) #ya lo decodifique
             
             print("DEBUG mensaje =>", repr(mensaje))
             partes = mensaje_str.split(" ", 5)
@@ -113,7 +123,7 @@ def manejar(cliente):
             clientes.remove(cliente) # saca al cliente de la lista(socket)
             cliente.close() #cierra el socket, para que el servidor no se comunique esa direccion
             nombre = nombres[indice] #extrae el nombre en base al indice
-            transmitir(f"{nombre} dejó el chat".encode(codigo)) # envia el mensaje al server
+            transmitir(f"{nombre} dejó el chat".encode(CODEC)) # envia el mensaje al server
             nombres.remove(nombre) #elimina el nombre del cliente del registro
             usuariosActivos -= 1 #disminiye la cantidad de usuarios activos
             with condicion: #solo un hilo a la vez
@@ -135,28 +145,47 @@ def recibir():
         
         print(f"Conectados con {str(direccion)}") #Muestra quién se conectó
         
-        cliente.send("Nombre".encode(codigo)) #codifica el nombre del cliente
-        texto  = cliente.recv(1024).decode(codigo) #decodifica el nombre del cliente
-        texto_partes = texto.split(" ", 5) #separa texto en partes
-        nombre = texto_partes[2].strip(":") # saca solo el nombre
-        if usuario_repetido(cliente, nombre):    #verifica si el nombre ya existe
-            continue # ignora lo de abajo
-        
-        nombres.append(nombre) # agrega el nombre al registro de nombres
-        clientes.append(cliente) # agrega al cliente al registro de clientes
-        
-        
-        print(f'El nombre del cliente es {nombre}')
-        transmitir(f'{nombre} se unió al chat'.encode(codigo))    
-        cliente.send('Conectado al servidor ☻'.encode(codigo))
-        
-        # target indica la funcion que manejará el hilo
-        # args con quien trabajara, es decir, al cliente que se asocia
-        hilo = threading.Thread(target=manejar, args=(cliente,)) #se crea el hilo que conecta el servidor con el cliente
-        with bloqueo: # un hilo a la vez
-            usuariosActivos += 1 # modifica el contador
-        hilo.start() # empieza el hilo
+        cliente.send("Nombre".encode(CODEC))
+        texto = cliente.recv(1024).decode(CODEC)
+        texto_partes = texto.split(" ", 5)
+        nombre = texto_partes[2].strip(":")
+        if usuario_repetido(cliente, nombre):
+            continue
+        # Moviendo la lógica del MFA directamente al servidor
+        cliente.send("MFA_CORREO".encode(CODEC))
+        correo = cliente.recv(1024).decode(CODEC).strip()
+        log.info(f"Correo recibido de {nombre}: {correo}")
 
+        if not Mfa.enviar_codigo(correo):
+            log.error(f"No se pudo enviar código MFA a {correo}")
+            cliente.send("MFA_ERROR".encode(CODEC))
+            cliente.close()
+            continue
+
+        cliente.send("MFA_CODIGO".encode(CODEC))
+        codigo_ingresado = cliente.recv(1024).decode(CODEC).strip()
+        log.debug(f"Código recibido de {nombre}: {codigo_ingresado}")
+
+        exito, motivo = Mfa.verificar_codigo(correo, codigo_ingresado)
+        if not exito:
+            log.warning(f"MFA fallido para {nombre}: {motivo}")
+            cliente.send(f"MFA_FALLO:{motivo}".encode(CODEC))
+            cliente.close()
+            continue
+
+        log.info(f"MFA exitoso para {nombre}")
+        #éxito
+
+        nombres.append(nombre)
+        clientes.append(cliente)
+        print(f'El nombre del cliente es {nombre}')
+        transmitir(f'{nombre} se unió al chat'.encode(CODEC))
+        cliente.send('Conectado al servidor ☻'.encode(CODEC))
+
+        hilo = threading.Thread(target=manejar, args=(cliente,))
+        with bloqueo:
+            usuariosActivos += 1
+        hilo.start()
 
 
 
@@ -171,7 +200,7 @@ caso contrario, regresa falso
 """
 def usuario_repetido(cliente, nombre):
     if nombre in nombres:
-        cliente.send("Nombre en uso, utilice otro usuario".encode(codigo))
+        cliente.send("Nombre en uso, utilice otro usuario".encode(CODEC))
         cliente.close()
         return True
     return False
@@ -187,7 +216,7 @@ def mensaje_privado(cliente, partes):
     print("DEBUG entra a mensaje privado", repr(nombres))
     if len(partes) < 6:
         print("DEBUG entra a condicion", repr(nombres))
-        cliente.send("Formato válido: /p nombre mensaje".encode(codigo))
+        cliente.send("Formato válido: /p nombre mensaje".encode(CODEC))
         return 
     try:
         # Extraer remitente, destinatario y mensaje
@@ -200,15 +229,15 @@ def mensaje_privado(cliente, partes):
         cliente_destino = clientes[indice_destino]
 
         # Construir dos mensajes: uno para el receptor y otro para el emisor
-        mensaje_para_receptor = f"(privado de {remitente_nombre}): {mensaje_cuerpo}".encode(codigo)
-        mensaje_para_emisor = f"(privado para {destinatario_nombre}): {mensaje_cuerpo}".encode(codigo)
+        mensaje_para_receptor = f"(privado de {remitente_nombre}): {mensaje_cuerpo}".encode(CODEC)
+        mensaje_para_emisor = f"(privado para {destinatario_nombre}): {mensaje_cuerpo}".encode(CODEC)
 
         # Enviar el mensaje correspondiente a cada uno
         cliente_destino.send(mensaje_para_receptor)
         cliente.send(mensaje_para_emisor)
 
     except ValueError:
-        cliente.send(f"⚠️ ERROR. Nombre: {partes[4]} inexistente".encode(codigo))
+        cliente.send(f"⚠️ ERROR. Nombre: {partes[4]} inexistente".encode(CODEC))
         return 
     
 
