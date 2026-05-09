@@ -19,47 +19,30 @@ import conectar # Módulo para el cliente: maneja la conexión a un servidor
 import utilerias as util # Módulo de utilidades: funciones varias (validaciones, colores, obtención de IP)
 import alojar # Módulo para el servidor: permite crear y alojar un servidor
 import tkinter as tk # Biblioteca principal de interfaz gráfica
-from tkinter import ttk # Necesario para usar el Combobox (lista desplegable de protocolos)
-
 """Crea el frame principal del menú y lo configura"""
 def crearFrame(ventana):
-    frameMenu = tk.Frame(ventana, bg=util.colorFondo) # Crea el contenedor principal (la pantalla) y le asigna el color de fondo
+    frameMenu = tk.Frame(ventana, bg=util.colorFondo)
 
-    util.label(frameMenu, "POTROCHAT", 40) # Muestra el título principal del programa
+    util.label(frameMenu, "POTROCHAT", 40)
 
     descripcion = (
         "Este programa tiene la finalidad conectar varios dispositivos\n"
         "mediante una interfaz amigable desarrollada en Python. El usuario\n"
         "tiene la opción de elegir ser cliente (envíar mensajes) o servidor\n"
-        "(alojar mensajes), así como de manejar el protocolo que desee."
+        "(alojar mensajes)."
     )
-    util.label(frameMenu, descripcion, 15) # Muestra la descripción del programa
+    util.label(frameMenu, descripcion, 15)
 
-    # Frame contenedor para la etiqueta y el Combobox
-    frameProtocolo = tk.Frame(frameMenu, bg=util.colorFondo)
-    frameProtocolo.pack(pady=10)
-
-    util.label(frameProtocolo, "Protocolo a usar:", 18)
-
-    # Combobox de selección TCP/UDP
-    protocolo = ttk.Combobox(frameProtocolo, 
-                             values=["TCP", "UDP"], 
-                             state="readonly", # No permite escribir texto, solo seleccionar
-                             width=10)
-    protocolo.current(0)  # Establece "TCP" como valor por defecto (índice 0)
-    protocolo.pack(pady=5) # Muestra el Combobox
-
-    # Botón para unirse (Cliente). Usa lambda para ejecutar la función al hacer clic.
-    # Llama a 'conectar.mostrarFrame', pasando el protocolo seleccionado dinámicamente con 'protocolo.get()'.
+    # Cliente (TCP)
     util.boton(frameMenu, "Unirse a un servidor", 
-               lambda: conectar.mostrarFrame(ventana, frameMenu, protocolo.get()))
+               lambda: conectar.mostrarFrame(ventana, frameMenu))
     
-    # Botón para crear (Servidor). Llama a 'alojar.mostrarFrame', pasando el protocolo seleccionado.
+    # Servidor (TCP)
     util.boton(frameMenu, "Crear un servidor", 
-               lambda: alojar.mostrarFrame(ventana, frameMenu, protocolo.get()))
+               lambda: alojar.mostrarFrame(ventana, frameMenu))
     
-    util.boton(frameMenu, "Salir", ventana.destroy) # Cierra la ventana y sale del programa
+    util.boton(frameMenu, "Salir", ventana.destroy)
 
-    util.labelIp(frameMenu) # Muestra la IP local del dispositivo para referencia
+    util.labelIp(frameMenu)
 
-    return frameMenu # Regresa el contenedor principal del menú
+    return frameMenu

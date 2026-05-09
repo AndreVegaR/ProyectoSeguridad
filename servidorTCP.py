@@ -77,7 +77,7 @@ def transmitir(mensaje):
         try:
             cliente.send(mensaje) #manda el mensaje de cada cliente
         except: #si un cliente es sacado por nombre repetido evita que truene
-            cliente.remove()
+            clientes.remove(cliente)
             cliente.close()
             
 

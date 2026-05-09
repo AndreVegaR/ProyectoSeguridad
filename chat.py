@@ -17,15 +17,13 @@ from tkinter import ttk, messagebox
 import threading
 import socket
 
-
 class ClienteChat:
     """
     Maneja la lógica de red del cliente.
     Se encarga de la conexión, envío y recepción de mensajes para TCP y UDP.
     """
 
-    def __init__(self, protocolo, ip, puerto):
-        self.protocolo = protocolo
+    def __init__(self,ip, puerto):
         self.ip = ip
         self.puerto = puerto
         self.socket = None
@@ -41,10 +39,8 @@ class ClienteChat:
         """
         self.nombre = nombre
         try:
-            if self.protocolo == "TCP":
-                self._iniciar_tcp()
-            else:
-                self._iniciar_udp()
+                
+            self._iniciar_tcp()
 
             self.ejecutando = True
             return True
@@ -77,27 +73,15 @@ class ClienteChat:
                     self.socket.close()
                     # Lanzamos una excepción para que sea capturada y mostrada al usuario.
                     raise ConnectionRefusedError(respuesta_servidor)
-
-        except:
-            raise # Re-lanzamos la excepción para que el código que llamó a iniciar() la maneje.
-
-    def _iniciar_udp(self):
-        """
-        Configura el socket UDP y envía el nombre de usuario como primer mensaje.
-        """
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.socket.sendto(self.nombre.encode(self.codigo), (self.ip, self.puerto))
-
+        except ConnectionRefusedError:
+            raise # Re-lanzamos solo si el nombre está en uso
     def enviar(self, mensaje):
         """
         Envía un mensaje al servidor usando el protocolo correspondiente.
         Retorna True si el envío fue exitoso, False en caso de error.
         """
         try:
-            if self.protocolo == "TCP":
-                self.socket.sendall(mensaje.encode(self.codigo))
-            else:
-                self.socket.sendto(mensaje.encode(self.codigo), (self.ip, self.puerto))
+            self.socket.sendall(mensaje.encode(self.codigo))
             return True
         except:
             return False
@@ -111,18 +95,12 @@ class ClienteChat:
         try:
             while self.ejecutando:
                 try:
-                    if self.protocolo == "TCP":
-                        datos = self.socket.recv(1024)
-                        if not datos:
-                            break
-                        mensaje = datos.decode(self.codigo)
-                    else:
-                        datos, _ = self.socket.recvfrom(1024)
-                        mensaje = datos.decode(self.codigo)
-
+                    datos = self.socket.recv(1024)
+                    if not datos:
+                        break
+                    mensaje = datos.decode(self.codigo)
                     if mensaje:
                         callback(mensaje)
-
                 except:
                     break
 
@@ -146,12 +124,11 @@ class VentanaChat:
     Gestiona la interfaz gráfica (GUI) de la ventana de chat.
     Se encarga de mostrar mensajes y manejar la interacción del usuario.
     """
-    def __init__(self, ventana_principal, ip, puerto, nombre, protocolo):
+    def __init__(self, ventana_principal, ip, puerto, nombre):
         self.ventana_principal = ventana_principal
         self.ip = ip
         self.puerto = puerto
         self.nombre = nombre
-        self.protocolo = protocolo
 
         self.crear_ventana()
         self.configurar_interfaz()
@@ -164,7 +141,7 @@ class VentanaChat:
         Crea y configura la ventana Toplevel para el chat.
         """
         self.ventana_chat = tk.Toplevel(self.ventana_principal)
-        self.ventana_chat.title(f"Chat - {self.nombre} ({self.protocolo})")
+        self.ventana_chat.title(f"Chat - {self.nombre} Seguridad Informática")
         self.ventana_chat.minsize(500, 400)
         self.centrar_ventana(700, 500)
         self.ventana_chat.protocol("WM_DELETE_WINDOW", self.al_cerrar)
@@ -178,7 +155,7 @@ class VentanaChat:
         frame_techo.pack(side='top', fill='x', padx=5, pady=5)
         tk.Label(
             frame_techo,
-            text=f"Conectado como {self.nombre} ({self.protocolo})",
+            text=f"Conectado como {self.nombre}",
             bg="#85dcff",
             font=("Arial", 12)
         ).pack(pady=5)
@@ -189,7 +166,7 @@ class VentanaChat:
         pie.pack(padx=10, pady=10, side="bottom", fill="x")
 
         # Instrucción para mensajes privados
-        comando_privado = "/p" if self.protocolo == "TCP" else "/privado"
+        comando_privado = "/p"
         tk.Label(pie, text=f"Usa '{comando_privado} <nombre> <mensaje>' para privado").pack(side="top", anchor="w")
 
         self.campo_entrada = tk.Entry(pie)
@@ -218,7 +195,7 @@ class VentanaChat:
         Muestra un error si la conexión inicial falla.
         Retorna True si el cliente se inicia correctamente, False en caso contrario.
         """
-        self.cliente = ClienteChat(self.protocolo, self.ip, self.puerto)
+        self.cliente = ClienteChat( self.ip, self.puerto)
 
         if not self.cliente.iniciar(self.nombre):
             messagebox.showerror("Error", "No se pudo conectar al servidor")
@@ -252,25 +229,18 @@ class VentanaChat:
             return
 
         comando_privado_tcp = "/p "
-        comando_privado_udp = "/privado "
 
         # Si es un mensaje privado, lo enviamos tal cual
-        if texto.startswith(comando_privado_tcp) or texto.startswith(comando_privado_udp):
-            if self.protocolo == "TCP":
-                import utilerias as util
-                paquete = f"({util.ahora()}) {self.nombre}: {texto}"
-            else: # UDP
-                paquete = texto
+        if texto.startswith(comando_privado_tcp):
+
+            import utilerias as util
+            paquete = f"({util.ahora()}) {self.nombre}: {texto}"
 
             self.cliente.enviar(paquete)
         # Si es un mensaje público, le añadimos el formato
         else:
-            if self.protocolo == "TCP":
-                import utilerias as util
-                paquete = f"({util.ahora()}) {self.nombre}: {texto}"
-            else: # UDP
-                paquete = f"{self.nombre}: {texto}"
-
+            import utilerias as util
+            paquete = f"({util.ahora()}) {self.nombre}: {texto}"
             self.cliente.enviar(paquete)
 
         self.campo_entrada.delete(0, tk.END)
@@ -395,8 +365,8 @@ class VentanaChat:
         self.ventana_chat.destroy()
 
 
-def iniciar_chat(ventana, ip, puerto, nombre, protocolo):
+def iniciar_chat(ventana, ip, puerto, nombre):
     """
     Función de entrada para crear y lanzar una nueva ventana de chat.
     """
-    return VentanaChat(ventana, ip, puerto, nombre, protocolo)
+    return VentanaChat(ventana, ip, puerto, nombre)

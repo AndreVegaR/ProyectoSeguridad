@@ -27,20 +27,7 @@ ventana.configure(bg=util.colorFondo) #Color de fondo
 ventana.protocol("WM_DELETE_WINDOW", ventana.destroy) #Se puede con el botón x
 
 frameMenu = menu.crearFrame(ventana) #Crea a la pantall de menú
-frameConectar = conectar.crearFrame(ventana, frameMenu) #Crea a la pantalla para unirse a un servidor
-frameAlojar = alojar.crearFrame(ventana, frameMenu) #Crea la pantalla para crear un servidor
-#frameChat = chat.crearChat(ventana, frameMenu) #Crea la pantalla del chat
 
-"""Función para mostrar un frame y ocultar el otro"""
-def mostrarFrame(frameMostrar):
-    for frame in (frameMenu, frameConectar, frameAlojar):
-        frame.pack_forget()
-    frameMostrar.pack(fill="both", expand=True)
-
-frameMenu.mostrar = mostrarFrame #Pasa la función a los frames
-frameConectar.mostrar = mostrarFrame
-frameAlojar.mostrar = mostrarFrame
-
-mostrarFrame(frameMenu) #Mostrar menú al inicio
+frameMenu.pack(fill="both", expand=True)
 
 ventana.mainloop() #Bucle para que siga abierta la ventana
