@@ -173,7 +173,30 @@ class VentanaChat:
             args=(self.manejar_mensaje_entrante,),
             daemon=True
         ).start()
+        self.segundos_inactividad = 0
+        self.limite_inactividad = 60  # 1 minuto
+        self.monitor_id = None # Referencia para cancelar/reiniciar el ciclo<
+        self.iniciar_monitoreo_inactividad() # Inicia el contador
 
+    def iniciar_monitoreo_inactividad(self):
+        """Incrementa el contador cada segundo y verifica si superó el límite."""
+        self.segundos_inactividad += 1
+        
+        if self.segundos_inactividad >= self.limite_inactividad:
+            self.cerrar_por_inactividad()
+        else:
+            # Vuelve a llamar a esta función en 1000ms (1 segundo)
+            self.monitor_id = self.ventana_chat.after(1000, self.iniciar_monitoreo_inactividad)
+
+    def reiniciar_cronometro(self, evento=None):
+        """Pone el contador a cero cada vez que el usuario interactúa."""
+        self.segundos_inactividad = 0
+
+    def cerrar_por_inactividad(self):
+        """Cierra la conexión y la ventana informando al usuario."""
+        messagebox.showwarning("Sesión expirada", "Se ha cerrado la sesión por 1 minuto de inactividad.")
+        self.al_cerrar() # Reutiliza tu función de cierre seguro
+    
     def crear_ventana(self):
         """
         Crea y configura la ventana Toplevel para el chat.
@@ -197,6 +220,10 @@ class VentanaChat:
             bg="#85dcff",
             font=("Arial", 12)
         ).pack(pady=5)
+        # Detectar cualquier tecla o clic en la ventana de chat
+        self.ventana_chat.bind_all("<Any-KeyPress>", self.reiniciar_cronometro)
+        self.ventana_chat.bind_all("<Button-1>", self.reiniciar_cronometro)
+        
 
        
         # Contiene los controles para enviar mensajes
@@ -266,7 +293,10 @@ class VentanaChat:
         if not texto:
             return
 
+        self.reiniciar_cronometro()
+
         comando_privado_tcp = "/p "
+        
 
         # Si es un mensaje privado, lo enviamos tal cual
         if texto.startswith(comando_privado_tcp):
@@ -395,12 +425,18 @@ class VentanaChat:
         Se ejecuta cuando el usuario cierra la ventana de chat.
         Se asegura de cerrar la conexión de red antes de destruir la ventana.
         """
+        if self.monitor_id:
+            try:
+                self.ventana_chat.after_cancel(self.monitor_id)
+            except:
+                pass
         try:
             self.cliente.cerrar()
         except:
             pass
-
         self.ventana_chat.destroy()
+
+        
 
 
 def iniciar_chat(ventana, ip, puerto, nombre):
@@ -408,3 +444,6 @@ def iniciar_chat(ventana, ip, puerto, nombre):
     Función de entrada para crear y lanzar una nueva ventana de chat.
     """
     return VentanaChat(ventana, ip, puerto, nombre)
+
+
+
