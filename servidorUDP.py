@@ -8,9 +8,10 @@ Descripción:
   ✔ Mensajes privados con el formato: /privado Nombre Mensaje
 
 Autores:
-- Aaron Xavier Burciaga Alcantar
-- Andreiy Montoya Navarro
+- Willian Alexander Tolano Fierros
+- Noelia Encinas Noriega
 - Abelardo Andre Vega Romero
+- Julian Gerardo Izaguirre Menchaca
 """
 
 import socket

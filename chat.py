@@ -7,9 +7,10 @@ Interfaz gráfica del cliente con soporte para:
 ✔ Detección de usuarios conectados/desconectados
 
 Autores:
-- Aaron Xavier Burciaga Alcantar
-- Andreiy Montoya Navarro
+- Willian Alexander Tolano Fierros
+- Noelia Encinas Noriega
 - Abelardo Andre Vega Romero
+- Julian Gerardo Izaguirre Menchaca
 """
 
 import tkinter as tk

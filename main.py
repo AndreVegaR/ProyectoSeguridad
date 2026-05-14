@@ -8,9 +8,10 @@ Funcionamiento:
 - Recibe los diferentes frames del programa y los muestra según se navegue
 
 Autores:
-- Aaron Xavier Burciaga Alcantar
-- Andreiy Montoya Navarro
+- Willian Alexander Tolano Fierros
+- Noelia Encinas Noriega
 - Abelardo Andre Vega Romero
+- Julian Gerardo Izaguirre Menchaca
 
 """
 import tkinter as tk #Interfaz gráfica

@@ -9,9 +9,10 @@ Funcionamiento:
 - Captura la selección del usuario y pasa el protocolo elegido ('TCP' o 'UDP') a los módulos 'conectar.py' y 'alojar.py'.
 
 Autores:
-- Aaron Xavier Burciaga Alcantar
-- Andreiy Montoya Navarro
+- Willian Alexander Tolano Fierros
+- Noelia Encinas Noriega
 - Abelardo Andre Vega Romero
+- Julian Gerardo Izaguirre Menchaca
 """
 
 """Importaciones"""

@@ -7,9 +7,10 @@ Descripción:
 Funcionamiento:
 
 Autores:
--Aaron Xavier Burciaga Alcantar
--Andreiy Montoya Navarro
--Abelardo Andre Vega Romero
+- Willian Alexander Tolano Fierros
+- Noelia Encinas Noriega
+- Abelardo Andre Vega Romero
+- Julian Gerardo Izaguirre Menchaca
 """
 
 """Importaciones"""

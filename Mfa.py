@@ -11,10 +11,10 @@ Funcionamiento:
 - verificar_codigo(correo, codigo_ingresado): valida que el código sea correcto y no haya expirado
  
 Autores:
-- Julián Gerardo Izaguirre Menchaca
 - Willian Alexander Tolano Fierros
+- Noelia Encinas Noriega
 - Abelardo Andre Vega Romero
--Noelia Encinas Noriega
+- Julian Gerardo Izaguirre Menchaca
 """
  
 import smtplib

@@ -14,9 +14,10 @@ Funcionamiento:
 - hilosCliente(): ejecuta las funciones en hilos
 
 Autores:
-- Aaron Xavier Burciaga Alcantar
-- Andreiy Montoya Navarro
+- Willian Alexander Tolano Fierros
+- Noelia Encinas Noriega
 - Abelardo Andre Vega Romero
+- Julian Gerardo Izaguirre Menchaca
 """
 
 """Importaciones"""
