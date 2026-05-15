@@ -20,6 +20,15 @@ import queue
 import utilerias as util
 import Mfa
 import logging
+from bitacoras import(
+    accesos,
+    mfa,
+    mensajes,
+    errores,
+    servidor,
+    sospechosos
+)
+
 
 #Otro Logger para debuggear en python....
 logging.basicConfig(
@@ -75,6 +84,10 @@ def iniciar(puerto=51225):
     servidor.bind(("0.0.0.0", puerto)) #Se conecta: IP (localhost en este caso), puerto (51225 por el 05/12/25). Parámetro de tupla
     servidor.listen() #Espera y atiende los clientes. Tiene una lista de espera en el SO
     print(f"Servidor iniciado en puerto {puerto}")
+
+    #registramos el inicio del servidor en las bitacoras
+    servidor.info(f"Servidor iniciado en puerto {puerto}")
+
     print("Abre varias terminales y ejecuta cliente.py")
     recibir()
 
@@ -117,6 +130,10 @@ def manejar(cliente):
                 continue
 
             print(f"Mensaje: {mensaje_str}") # decodifica el mensaje para mostrarlo
+
+            #registra el mensaje en las bitacoras
+            mensajes.info(mensaje_str)
+
             transmitir(mensaje) # Envía el mensajee a cada miembro
                 #/p maria hola hola hola hola hola
         except:  # si se desconecta
@@ -124,6 +141,11 @@ def manejar(cliente):
             clientes.remove(cliente) # saca al cliente de la lista(socket)
             cliente.close() #cierra el socket, para que el servidor no se comunique esa direccion
             nombre = nombres[indice] #extrae el nombre en base al indice
+
+            #registramos la salida del usuario en las bitacoras
+            accesos.info(f"{nombre} se desconectó")
+
+            
             transmitir(f"{nombre} dejó el chat".encode(CODEC)) # envia el mensaje al server
             nombres.remove(nombre) #elimina el nombre del cliente del registro
             usuariosActivos -= 1 #disminiye la cantidad de usuarios activos
@@ -160,6 +182,14 @@ def recibir():
         nombres.append(nombre)
         clientes.append(cliente)
         print(f'El nombre del cliente es {nombre}')
+
+        #registramos el acceso del usuario en las bitacoras
+        accesos.info(f"{nombre} conectado desde {direccion[0]}")
+        
+        
+        # Aqui es donde se registra en la bitacora cuando alguien entra al chat
+        mensajes.info(f"{nombre} se unió al chat")
+        
         transmitir(f'{nombre} se unió al chat'.encode(CODEC))
         cliente.send('Conectado al servidor ☻'.encode(CODEC))
 
@@ -174,6 +204,9 @@ def verificar_mfa(cliente, nombre):
     correo = cliente.recv(1024).decode(CODEC).strip()
     log.info(f"Correo recibido de {nombre}: {correo}")
 
+    #registramos el MFA enviado en las bitacoras
+    mfa.info(f"Correo enviado a {correo} para {nombre}")
+
     if not Mfa.enviar_codigo(correo):
         log.error(f"No se pudo enviar código MFA a {correo}")
         cliente.send("MFA_ERROR".encode(CODEC))
@@ -185,11 +218,16 @@ def verificar_mfa(cliente, nombre):
 
     exito, motivo = Mfa.verificar_codigo(correo, codigo_ingresado)
     if not exito:
+
+        #registramos el fallo de MFA en las bitacoras
+        mfa.warning(f"{nombre} falló MFA: {motivo}")
+
         log.warning(f"MFA fallido para {nombre}: {motivo}")
         cliente.send(f"MFA_FALLO:{motivo}".encode(CODEC))
         return False
 
     log.info(f"MFA exitoso para {nombre}")
+    mfa.info(f"{nombre} autenticado correctamente")
     return True
 
 """
@@ -203,6 +241,10 @@ caso contrario, regresa falso
 """
 def usuario_repetido(cliente, nombre):
     if nombre in nombres:
+
+        #registramos el nombre repetido en las bitacoras
+        sospechosos.warning(f"Nombre duplicado: {nombre}")
+
         cliente.send("Nombre en uso, utilice otro usuario".encode(CODEC))
         cliente.close()
         return True
@@ -238,6 +280,8 @@ def mensaje_privado(cliente, partes):
         # Enviar el mensaje correspondiente a cada uno
         cliente_destino.send(mensaje_para_receptor)
         cliente.send(mensaje_para_emisor)
+
+        mensajes.info(f"Mensaje privado de {remitente_nombre} para {destinatario_nombre}: {mensaje_cuerpo}")
 
     except ValueError:
         cliente.send(f"⚠️ ERROR. Nombre: {partes[4]} inexistente".encode(CODEC))

@@ -31,17 +31,17 @@ def iniciar(mostrar_funcion):
     ip = util.pedirIp()
     puerto = util.pedirPuerto()
     nombre = util.pedirNombre()
-    cliente = conectar(ip, puerto)  # Establece la conexión con el servidor
-    hilosCliente(recibir, escribir, cliente, nombre, mostrar_funcion)  # Llama la función que ejecuta hilos
+    cliente = conectar(ip, puerto) 
+    hilosCliente(recibir, escribir, cliente, nombre, mostrar_funcion)
     return cliente
 
 
 """Configura el cliente mediante un socket"""
 def conectar(ip, puerto):
     cliente = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # Socket TCP (SOCK_STREAM) IPv4 (AF_INET)
-    cliente.settimeout(5)  # Tiempo máximo de espera 5 segundos
+    cliente.settimeout(5)  # Tiempo de espera 5 segundos
     try:
-        cliente.connect((ip, puerto))  # Se conecta con el servidor una vez y queda asociado.
+        cliente.connect((ip, puerto))  # Se conecta con el servidor una vez y queda asociado
     except socket.timeout:
         raise Exception(f"Timeout: No se pudo conectar al servidor TCP en {ip}:{puerto}")
     except ConnectionRefusedError:
@@ -66,7 +66,7 @@ def recibir(cliente, nombre, mostrar_funcion):
                 if not texto:
                     continue
                 else:
-                    mostrar_funcion(texto)  # *** USO DE LA FUNCIÓN PASADA COMO PARÁMETRO ***
+                    mostrar_funcion(texto)  #USO DE LA FUNCIÓN PASADA COMO PARÁMETRO
         except Exception as e:
             mostrar_funcion(f"Error: {e}")  # Usamos también la función para mostrar el error
             cliente.close()  # Si hay un error, cierra el cliente y rompe el bucle
@@ -88,11 +88,7 @@ def hilosCliente(recibir, escribir, cliente, nombre, mostrar_funcion):
     threading.Thread(target=escribir, args=(cliente, nombre)).start()
 
 
-# NOTA: La llamada final a iniciar() DEBE ser modificada por el usuario al usar este archivo.
-# Por ejemplo, si se usa desde otro script (como menu.py), el archivo lo llamaría así:
-# cliente_tcp.iniciar(print)
-#
-# Para que funcione al ejecutar este archivo directamente:
+# la llamada final a iniciar() DEBE ser modificada por el usuario al usar este archivo
 def funcion_para_mostrar(texto):
     print(texto)
 

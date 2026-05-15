@@ -26,6 +26,9 @@ from datetime import datetime, timedelta
 from dotenv import load_dotenv #Para cargar las variables de entorno, es el mismo del de Java, pero con el pitón
 import os #el sistema operativo 👀👀👀👀👀👀👀👀👀👀👀👀
 
+from bitacoras import mfa, mensajes, errores #Para registrar eventos en las bitácoras de MFA y mensajes
+
+
 # Método que crea un Logger en python (mucho más enredoso que java la verdad)
 logging.basicConfig(
     level=logging.DEBUG,
@@ -48,6 +51,10 @@ def generar_codigo() -> str:
     #Genera un número aleatorio de 6 dígitos
     codigo = str(random.randint(100000, 999999))
     log.debug(f"Código generado: {codigo}")
+
+    #registramos la generación del código MFA
+    mfa.info("Código MFA generado")
+
     return codigo
  
  
@@ -56,6 +63,9 @@ def enviar_codigo(correo: str) -> bool:
     codigo = generar_codigo()
     expira = datetime.now() + timedelta(minutes=EXPIRACION_MIN)
     _codigos_activos[correo] = {"codigo": codigo, "expira": expira}
+
+    #registramos la solicitud MFA
+    mfa.info(f"Solicitud MFA para {correo}")
  
     log.info(f"Intentando enviar código a {correo}, expira a las {expira.strftime('%H:%M:%S')}")
  
@@ -83,16 +93,34 @@ def enviar_codigo(correo: str) -> bool:
             servidor_smtp.sendmail(CORREO_REMITENTE, correo, mensaje.as_string()) #Envía el correo
  
         log.info(f"Código enviado exitosamente a {correo}")
+
+        #registramos el envío exitoso
+        mensajes.info(f"Código MFA enviado a {correo}")
+
         return True
  
     except smtplib.SMTPAuthenticationError:
         log.error("Fallo de autenticación con Gmail.")
+
+        #registramos error de autenticación
+        errores.error("Fallo autenticación Gmail")
+
         return False
+
     except smtplib.SMTPException as e:
         log.error(f"Error SMTP al enviar a {correo}: {e}")
+
+        #registramos error SMTP
+        errores.error(f"SMTP: {e}")
+
         return False
+
     except Exception as e:
         log.error(f"Error inesperado al enviar correo a {correo}: {e}")
+
+        #registramos el error en las bitacoras
+        errores.error(str(e))
+
         return False
  
  
@@ -101,20 +129,36 @@ def verificar_codigo(correo: str, codigo_ingresado: str) -> tuple[bool, str]:
  
     if correo not in _codigos_activos:
         log.warning(f"No hay código activo para {correo}")
+
+        #registramos intento inválido
+        mfa.warning(f"{correo} intentó verificar sin código activo")
+
         return False, "no_existe"
  
     codigo = _codigos_activos[correo]
  
     if datetime.now() > codigo["expira"]:
         log.warning(f"Código expirado para {correo}")
+
+        #registramos expiración del código
+        mfa.warning(f"Código expirado para {correo}")
+
         del _codigos_activos[correo]
         return False, "expirado"
  
     if codigo_ingresado.strip() != codigo["codigo"]:
         log.warning(f"Código incorrecto para {correo}")
+
+        #registramos código incorrecto
+        mfa.warning(f"Código incorrecto para {correo}")
+
         return False, "incorrecto"
  
     # si pasa todas las excepciones se borra el código para que ya no se pueda usar
     del _codigos_activos[correo]
     log.info(f"Código verificado correctamente para {correo}")
+
+    #registramos MFA exitoso
+    mfa.info(f"{correo} autenticado correctamente")
+
     return True, "ok"

@@ -37,7 +37,7 @@ def conectar(servidor, puerto):
     cliente = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     # Validar que el servidor existe enviando un paquete de prueba
     try:
-        cliente.settimeout(3)  # Timeout de 3 segundos
+        cliente.settimeout(3)  # Tiempo de espera de 3 segundos
         cliente.sendto(b"PING", (servidor, puerto))  # Envía un paquete de prueba
         # Intenta recibir respuesta
         try:
@@ -45,7 +45,7 @@ def conectar(servidor, puerto):
             print(f"Servidor UDP encontrado: {servidor}:{puerto}")
         except socket.timeout:
             print(f"Advertencia: No se recibió respuesta del servidor, pero puede estar disponible")
-        cliente.settimeout(None)  # Restaura timeout a infinito
+        cliente.settimeout(None)  # Restaura tiempo de espera a infinito
     except socket.gaierror:
         raise Exception(f"Error de DNS: No se pudo resolver la dirección {servidor}")
     except Exception as e:
