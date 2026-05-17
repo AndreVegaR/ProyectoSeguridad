@@ -1,10 +1,10 @@
 """
 Chat.py
-Interfaz gráfica del cliente con soporte para:
-✔ TCP
-✔ UDP
-✔ Mensajes privados desde combobox
-✔ Detección de usuarios conectados/desconectados
+Interfaz grafica del cliente con soporte para:
+TCP
+Mensajes privados con /p nombre mensaje
+Deteccion de usuarios conectados/desconectados
+Sanitizacion de entrada antes de enviar al servidor
 
 Autores:
 - Willian Alexander Tolano Fierros
@@ -17,18 +17,19 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import threading
 import socket
+import utilerias as util
 
-#Bitácoras del sistema
+#Bitacoras del sistema
 from bitacoras import accesos, mensajes, errores, mfa
 
 
 class ClienteChat:
     """
-    Maneja la lógica de red del cliente.
-    Se encarga de la conexión, envío y recepción de mensajes para TCP y UDP.
+    Maneja la logica de red del cliente.
+    Se encarga de la conexion, envio y recepcion de mensajes para TCP.
     """
 
-    def __init__(self,ip, puerto):
+    def __init__(self, ip, puerto):
         self.ip = ip
         self.puerto = puerto
         self.socket = None
@@ -38,9 +39,9 @@ class ClienteChat:
 
     def iniciar(self, nombre):
         """
-        Inicia la conexión del cliente con el servidor.
+        Inicia la conexion del cliente con el servidor.
         Realiza el handshake inicial para registrar el nombre de usuario.
-        Retorna True si la conexión es exitosa, False en caso contrario.
+        Retorna True si la conexion es exitosa, False en caso contrario.
         """
         self.nombre = nombre
         try:
@@ -54,16 +55,16 @@ class ClienteChat:
             return True
         except Exception as e:
 
-            #Registramos error de conexión
+            #Registramos error de conexion
             errores.error(f"Error al iniciar cliente {nombre}: {e}")
 
             print(f"Error al iniciar cliente: {e}")
             return False
-        
+
     def _iniciar_tcp(self):
         """
-        Establece una conexión TCP y realiza el handshake para validar el nombre.
-        Lanza una excepción si el nombre ya está en uso o si la conexión falla.
+        Establece una conexion TCP y realiza el handshake para validar el nombre.
+        Lanza una excepcion si el nombre ya esta en uso o si la conexion falla.
         """
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.settimeout(5)
@@ -78,10 +79,10 @@ class ClienteChat:
 
                 respuesta = self.socket.recv(1024).decode(self.codigo)
 
-                if "nombre en uso" in respuesta.lower():
+                if "nombre en uso" in respuesta.lower() or "invalido" in respuesta.lower():
 
-                    #Registramos intento con nombre duplicado
-                    accesos.warning(f"Nombre duplicado: {self.nombre}")
+                    #Registramos intento con nombre duplicado o invalido
+                    accesos.warning(f"Nombre rechazado por el servidor: {self.nombre}")
 
                     self.socket.close()
                     raise ConnectionRefusedError(respuesta)
@@ -99,7 +100,7 @@ class ClienteChat:
                         errores.error(f"No se pudo enviar MFA a {correo}")
 
                         self.socket.close()
-                        raise ConnectionRefusedError("No se pudo enviar el código MFA.")
+                        raise ConnectionRefusedError("No se pudo enviar el codigo MFA.")
 
                     if instruccion == "MFA_CODIGO":
                         codigo = self._pedir_codigo()
@@ -110,11 +111,11 @@ class ClienteChat:
                         if resultado.startswith("MFA_FALLO"):
 
                             #Registramos fallo MFA
-                            mfa.warning(f"{self.nombre} falló autenticación")
+                            mfa.warning(f"{self.nombre} fallo autenticacion")
 
-                            motivo = resultado.split(":")[1] if ":" in resultado else "desconocido"
+                            motivo = resultado.split(":", 1)[1] if ":" in resultado else "desconocido"
                             self.socket.close()
-                            raise ConnectionRefusedError(f"Código MFA inválido: {motivo}")
+                            raise ConnectionRefusedError(f"Codigo MFA invalido: {motivo}")
 
                         else:
 
@@ -124,22 +125,22 @@ class ClienteChat:
         except ConnectionRefusedError:
             raise
 
-    #Pantalla de correo       
+    #Pantalla de correo
     def _pedir_correo(self):
         import tkinter.simpledialog as sd
-        correo = sd.askstring("Verificación MFA", "Ingresa tu correo para recibir el código:")
+        correo = sd.askstring("Verificacion MFA", "Ingresa tu correo para recibir el codigo:")
         return correo.strip() if correo else ""
 
-    #Pantalla de código 
+    #Pantalla de codigo
     def _pedir_codigo(self):
         import tkinter.simpledialog as sd
-        codigo = sd.askstring("Verificación MFA", "Ingresa el código que llegó a tu correo:")
+        codigo = sd.askstring("Verificacion MFA", "Ingresa el codigo que llego a tu correo:")
         return codigo.strip() if codigo else ""
-    
+
     def enviar(self, mensaje):
         """
-        Envía un mensaje al servidor usando el protocolo correspondiente.
-        Retorna True si el envío fue exitoso, False en caso de error.
+        Envia un mensaje al servidor.
+        Retorna True si el envio fue exitoso, False en caso de error.
         """
         try:
             self.socket.sendall(mensaje.encode(self.codigo))
@@ -177,7 +178,7 @@ class ClienteChat:
 
                 except Exception as e:
 
-                    #Registramos error de recepción
+                    #Registramos error de recepcion
                     errores.error(f"Error recibiendo mensaje: {e}")
 
                     break
@@ -194,18 +195,18 @@ class ClienteChat:
             if self.socket:
                 self.socket.close()
 
-                #Registramos cierre de conexión
-                accesos.info(f"{self.nombre} cerró conexión")
+                #Registramos cierre de conexion
+                accesos.info(f"{self.nombre} cerro conexion")
 
         except Exception as e:
 
             #Registramos error cerrando socket
-            errores.error(f"Error cerrando conexión: {e}")
+            errores.error(f"Error cerrando conexion: {e}")
 
 
 class VentanaChat:
     """
-    Gestiona la interfaz gráfica (GUI) de la ventana de chat.
+    Gestiona la interfaz grafica de la ventana de chat.
     """
 
     def __init__(self, ventana_principal, ip, puerto, nombre):
@@ -230,31 +231,31 @@ class VentanaChat:
         ).start()
         self.segundos_inactividad = 0
         self.limite_inactividad = 60  # 1 minuto
-        self.monitor_id = None # Referencia para cancelar/reiniciar el ciclo<
+        self.monitor_id = None # Referencia para cancelar/reiniciar el ciclo
         self.iniciar_monitoreo_inactividad() # Inicia el contador
 
     def iniciar_monitoreo_inactividad(self):
-        """Incrementa el contador cada segundo y verifica si superó el límite."""
+        """Incrementa el contador cada segundo y verifica si supero el limite."""
         self.segundos_inactividad += 1
-        
+
         if self.segundos_inactividad >= self.limite_inactividad:
             self.cerrar_por_inactividad()
         else:
-            # Vuelve a llamar a esta función en 1000ms (1 segundo)
+            # Vuelve a llamar a esta funcion en 1000ms (1 segundo)
             self.monitor_id = self.ventana_chat.after(1000, self.iniciar_monitoreo_inactividad)
 
     def reiniciar_cronometro(self, evento=None):
-        """Pone el contador a cero cada vez que el usuario interactúa."""
+        """Pone el contador a cero cada vez que el usuario interactua."""
         self.segundos_inactividad = 0
 
     def cerrar_por_inactividad(self):
-        """Cierra la conexión y la ventana informando al usuario."""
-        messagebox.showwarning("Sesión expirada", "Se ha cerrado la sesión por 1 minuto de inactividad.")
-        self.al_cerrar() # Reutiliza tu función de cierre seguro
-    
+        """Cierra la conexion y la ventana informando al usuario."""
+        messagebox.showwarning("Sesion expirada", "Se ha cerrado la sesion por 1 minuto de inactividad.")
+        self.al_cerrar() # Reutiliza la funcion de cierre seguro
+
     def crear_ventana(self):
         self.ventana_chat = tk.Toplevel(self.ventana_principal)
-        self.ventana_chat.title(f"Chat - {self.nombre} Seguridad Informática")
+        self.ventana_chat.title(f"Chat - {self.nombre} Seguridad Informatica")
         self.ventana_chat.minsize(500, 400)
         self.centrar_ventana(700, 500)
         self.ventana_chat.protocol("WM_DELETE_WINDOW", self.al_cerrar)
@@ -271,12 +272,9 @@ class VentanaChat:
             font=("Arial", 12)
         ).pack(pady=5)
 
-
-
         # Detectar cualquier tecla o clic en la ventana de chat
         self.ventana_chat.bind_all("<Any-KeyPress>", self.reiniciar_cronometro)
         self.ventana_chat.bind_all("<Button-1>", self.reiniciar_cronometro)
-        
 
         pie = tk.Frame(self.ventana_chat, height=50)
         pie.pack(padx=10, pady=10, side="bottom", fill="x")
@@ -290,7 +288,7 @@ class VentanaChat:
 
         self.campo_entrada = tk.Entry(pie)
         self.campo_entrada.bind("<Return>", lambda e: self.al_enviar())
-        self.campo_entrada.pack(side="left", expand=True, fill="x", pady=(5,0))
+        self.campo_entrada.pack(side="left", expand=True, fill="x", pady=(5, 0))
 
         tk.Button(pie, text="Enviar", command=self.al_enviar).pack(side="right", padx=10)
 
@@ -322,20 +320,47 @@ class VentanaChat:
 
         if not texto:
             return
-        
 
         self.reiniciar_cronometro()
 
         comando_privado_tcp = "/p "
-        
 
-        # Si es un mensaje privado, lo enviamos tal cual
         if texto.startswith(comando_privado_tcp):
+            # Si es un mensaje privado separamos destinatario y cuerpo
+            # formato esperado: /p destinatario cuerpo del mensaje
+            partes_privado = texto.split(" ", 2)
 
-            import utilerias as util
-            paquete = f"({util.ahora()}) {self.nombre}: {texto}"
+            if len(partes_privado) < 3:
+                self.mostrar_mensaje_sistema("Formato correcto: /p nombre mensaje")
+                return
 
-        self.cliente.enviar(paquete)
+            #sanitizamos el nombre del destinatario antes de mandarlo
+            destinatario = util.sanitizar_nombre(partes_privado[1])
+            if not util.validar_nombre(destinatario):
+                self.mostrar_mensaje_sistema("El nombre del destinatario no es valido.")
+                return
+
+            #sanitizamos el cuerpo del mensaje privado
+            cuerpo = util.sanitizar(partes_privado[2])
+            if not cuerpo:
+                self.mostrar_mensaje_sistema("El mensaje privado no puede estar vacio.")
+                return
+
+            paquete = f"({util.ahora()}) {self.nombre}: /p {destinatario} {cuerpo}"
+
+        else:
+            # Si es un mensaje publico sanitizamos el texto antes de armarlo
+            # antes de este fix paquete nunca se asignaba para mensajes publicos
+            # y causaba NameError o mandaba el paquete del mensaje anterior
+            cuerpo = util.sanitizar(texto)
+            if not cuerpo:
+                self.mostrar_mensaje_sistema("El mensaje contiene solo caracteres no permitidos.")
+                return
+
+            paquete = f"({util.ahora()}) {self.nombre}: {cuerpo}"
+
+        if not self.cliente.enviar(paquete):
+            self.mostrar_mensaje_sistema("No se pudo enviar el mensaje.")
 
         self.campo_entrada.delete(0, tk.END)
 
@@ -357,7 +382,7 @@ class VentanaChat:
     def al_cerrar(self):
         """
         Se ejecuta cuando el usuario cierra la ventana de chat.
-        Se asegura de cerrar la conexión de red antes de destruir la ventana.
+        Se asegura de cerrar la conexion de red antes de destruir la ventana.
         """
         if self.monitor_id:
             try:
@@ -370,11 +395,9 @@ class VentanaChat:
             pass
         self.ventana_chat.destroy()
 
-        
-
 
 def iniciar_chat(ventana, ip, puerto, nombre):
     """
-    Función de entrada para crear y lanzar una nueva ventana de chat.
+    Funcion de entrada para crear y lanzar una nueva ventana de chat.
     """
     return VentanaChat(ventana, ip, puerto, nombre)

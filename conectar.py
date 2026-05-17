@@ -55,34 +55,54 @@ def regresar(frameConectar, frameMenu):
     frameConectar.pack_forget() #oculta este frame
     frameMenu.pack(fill="both", expand=True) #igual que arriba
 
+
 """Crea lo gráfico para la pantalla de conectar"""
 def crearFrame(ventana, frameMenu):
-    framePrincipal = tk.Frame(ventana, bg=util.colorFondo) #crea el frame
+    # Frame de fondo que cubre toda la ventana
+    framePrincipal = tk.Frame(ventana, bg=util.colorFondo)
 
-    # Mostrar imagen del proyecto
-    try:
-        img_tk = tk.PhotoImage(file="potros-itson.png")
-        lbl_img = tk.Label(framePrincipal, image=img_tk, bg=util.colorFondo)
-        lbl_img.image = img_tk
-        lbl_img.pack(pady=8)
-    except Exception as e:
+    # Panel tipo tarjeta centrado — mismo estilo que el menú
+    panel = tk.Frame(framePrincipal, bg="#161b22")
+    panel.place(relx=0.5, rely=0.5, anchor="center", width=480)
 
-        #Registramos error cargando imagen
-        errores.error(f"Error cargando imagen principal: {e}")
+    # Barra azul superior
+    tk.Frame(panel, bg="#1f6feb", height=4).pack(fill="x")
 
-        pass
+    contenido = tk.Frame(panel, bg="#161b22", padx=36, pady=28)
+    contenido.pack(fill="both", expand=True)
 
-    # Mostrar protocolo seleccionado
-    util.label(framePrincipal, f"Conectarse a servidor", 18)
+    # Título de la pantalla
+    tk.Label(
+        contenido,
+        text="Unirse al chat",
+        font=(util.fuente, 26, "bold"),
+        bg="#161b22",
+        fg=util.colorTexto
+    ).pack()
 
-    campoIP = util.frameInfo(framePrincipal, "Dirección IP del servidor", 18) # Pide IP
-    campoPuerto = util.frameInfo(framePrincipal, "Puerto del servidor", 5) # Pide puerto
-    campoNombre = util.frameInfo(framePrincipal, "Nombre de usuario", 20) # Pide usuario
+    # Subtítulo
+    tk.Label(
+        contenido,
+        text="Ingresa los datos del servidor",
+        font=(util.fuente, 10),
+        bg="#161b22",
+        fg="#58a6ff"
+    ).pack(pady=(2, 14))
+
+    # Línea separadora
+    tk.Frame(contenido, bg="#30363d", height=1).pack(fill="x", pady=(0, 16))
+
+    campoIP     = util.frameInfo(contenido, "Dirección IP del servidor", 18) # Pide IP
+    campoPuerto = util.frameInfo(contenido, "Puerto del servidor", 5)         # Pide puerto
+    campoNombre = util.frameInfo(contenido, "Nombre de usuario", 20)          # Pide usuario
+
+    # Label para mostrar errores inline sin interrumpir con popups
+    lbl_error = tk.Label(contenido, text="", font=(util.fuente, 10),bg="#161b22", fg="#f85149")
+    lbl_error.pack(pady=(8, 0))
 
     """Método que maneja la ejecución cuando se presione el botón"""
-    
     def clickConectarse():
-        ip = campoIP.get()
+        ip     = campoIP.get()
         puerto = campoPuerto.get()
         nombre = campoNombre.get()
 
@@ -91,23 +111,25 @@ def crearFrame(ventana, frameMenu):
             #Registramos intento incompleto
             sospechosos.warning("Intento de conexión con campos vacíos")
 
-            mb.showwarning("Campos vacíos", "Llene los campos solicitados")
+            lbl_error.config(text="Llene todos los campos")
             return
 
         if not validar(ip, puerto):
 
             #Registramos intento inválido
             sospechosos.warning(
-                f"Intento inválido -> IP: {ip} | Puerto: {puerto}"
+                f"Intento invalido: IP: {ip} | Puerto: {puerto}"
             )
 
-            mb.showerror("Conexión fallida", "IP o puerto inválidos")
+            lbl_error.config(text="IP o puerto inválidos")
             return
 
+        lbl_error.config(text="") # limpiamos el error si todo está bien
+
         global ip_servidor, puerto_servidor, nombre_usuario
-        ip_servidor = ip
+        ip_servidor     = ip
         puerto_servidor = int(puerto)
-        nombre_usuario = nombre
+        nombre_usuario  = nombre
 
         try:
 
@@ -136,22 +158,19 @@ def crearFrame(ventana, frameMenu):
                 f"Error conectando {nombre_usuario}: {e}"
             )
 
-            mb.showerror(
-                "Error de conexión",
-                f"No se pudo conectar: {e}"
-            )
+            lbl_error.config(text=f"No se pudo conectar: {e}")
+
+    util.boton(contenido, " Conectarse via TCP", clickConectarse)
 
     util.boton(
-        framePrincipal,
-        f"Conectarse via TCP",
-        clickConectarse
-    )
-
-    util.boton(
-        framePrincipal,
+        contenido,
         "Regresar",
-        lambda: regresar(framePrincipal, frameMenu)
+        lambda: regresar(framePrincipal, frameMenu),
+        color="#21262d" # gris oscuro para diferenciarlo del botón principal
     )
+
+    # Barra azul inferior
+    tk.Frame(panel, bg="#1f6feb", height=2).pack(fill="x")
 
     return framePrincipal # Regresa el frame creado con todo lo gráfico
 
