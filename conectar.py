@@ -95,18 +95,24 @@ def crearFrame(ventana, frameMenu):
     campoIP     = util.frameInfo(contenido, "Dirección IP del servidor", 18) # Pide IP
     campoPuerto = util.frameInfo(contenido, "Puerto del servidor", 5)         # Pide puerto
     campoNombre = util.frameInfo(contenido, "Nombre de usuario", 20)          # Pide usuario
+    campoPass   = util.frameInfo(contenido, "Contraseña", 20, ocultar=True)   # Pide contraseña
 
     # Label para mostrar errores inline sin interrumpir con popups
-    lbl_error = tk.Label(contenido, text="", font=(util.fuente, 10),bg="#161b22", fg="#f85149")
+    lbl_error = tk.Label(contenido, text="", font=(util.fuente, 10), bg="#161b22", fg="#f85149", wraplength=380, justify="center")
     lbl_error.pack(pady=(8, 0))
+
+    # Contador de intentos fallidos de contraseña (lista para mutabilidad en closure)
+    intentos_fallidos = [0]
+    LIMITE_INTENTOS = 3
 
     """Método que maneja la ejecución cuando se presione el botón"""
     def clickConectarse():
         ip     = campoIP.get()
         puerto = campoPuerto.get()
         nombre = campoNombre.get()
+        contrasena = campoPass.get()
 
-        if not ip or not puerto or not nombre:
+        if not ip or not puerto or not nombre or not contrasena:
 
             #Registramos intento incompleto
             sospechosos.warning("Intento de conexión con campos vacíos")
@@ -123,6 +129,36 @@ def crearFrame(ventana, frameMenu):
 
             lbl_error.config(text="IP o puerto inválidos")
             return
+
+        # Autenticacion con contraseña:
+        # Si el usuario ya existe, verificamos su contraseña.
+        # Si no existe aun, lo registramos con esa contraseña (primer acceso).
+        if util.usuario_existe(nombre):
+            if not util.verificar_contrasena(nombre, contrasena):
+                intentos_fallidos[0] += 1
+                restantes = LIMITE_INTENTOS - intentos_fallidos[0]
+                sospechosos.warning(
+                    f"Contraseña incorrecta para {nombre} "
+                    f"(intento {intentos_fallidos[0]}/{LIMITE_INTENTOS})"
+                )
+                if intentos_fallidos[0] >= LIMITE_INTENTOS:
+                    lbl_error.config(
+                        text="Límite de intentos alcanzado. Usa 'Regresar' e intenta de nuevo."
+                    )
+                    # Solo deshabilitamos el boton de conectar, no el de regresar
+                    for widget in contenido.winfo_children():
+                        if isinstance(widget, tk.Button) and "Conectarse" in str(widget.cget("text")):
+                            widget.config(state="disabled")
+                else:
+                    lbl_error.config(
+                        text=f"Contraseña incorrecta. Intentos restantes: {restantes}"
+                    )
+                return
+            intentos_fallidos[0] = 0  # reiniciamos si el login fue exitoso
+            accesos.info(f"Login exitoso para {nombre}")
+        else:
+            util.registrar_usuario(nombre, contrasena)
+            accesos.info(f"Usuario nuevo registrado: {nombre}")
 
         lbl_error.config(text="") # limpiamos el error si todo está bien
 

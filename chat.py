@@ -18,6 +18,8 @@ from tkinter import ttk, messagebox
 import threading
 import socket
 import utilerias as util
+from cryptography.hazmat.primitives import serialization, hashes
+from cryptography.hazmat.primitives.asymmetric import padding
 
 #Bitacoras del sistema
 from bitacoras import accesos, mensajes, errores, mfa
@@ -36,6 +38,18 @@ class ClienteChat:
         self.nombre = None
         self.ejecutando = False
         self.codigo = "utf-8"
+        self._clave_publica = None  # Se recibe del servidor al conectar
+
+    def _cifrar(self, texto):
+        """Cifra un string con la clave publica RSA del servidor."""
+        return self._clave_publica.encrypt(
+            texto.encode(self.codigo),
+            padding.OAEP(
+                mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                algorithm=hashes.SHA256(),
+                label=None
+            )
+        )
 
     def iniciar(self, nombre):
         """
@@ -72,10 +86,16 @@ class ClienteChat:
         self.socket.settimeout(None)
 
         try:
+            # Primero recibimos la clave publica RSA del servidor (viene en PEM, ~450 bytes)
+            pem = b""
+            while b"-----END PUBLIC KEY-----" not in pem:
+                pem += self.socket.recv(1024)
+            self._clave_publica = serialization.load_pem_public_key(pem)
+
             datos = self.socket.recv(1024).decode(self.codigo)
             if "nombre" in datos.lower():
                 mensaje_nombre = f"dummy dummy {self.nombre}:"
-                self.socket.sendall(mensaje_nombre.encode(self.codigo))
+                self.socket.sendall(self._cifrar(mensaje_nombre))
 
                 respuesta = self.socket.recv(1024).decode(self.codigo)
 
@@ -90,7 +110,7 @@ class ClienteChat:
                 #el servidor pide el MFA
                 if respuesta == "MFA_CORREO":
                     correo = self._pedir_correo()
-                    self.socket.sendall(correo.encode(self.codigo))
+                    self.socket.sendall(self._cifrar(correo))
 
                     instruccion = self.socket.recv(1024).decode(self.codigo)
 
@@ -104,7 +124,7 @@ class ClienteChat:
 
                     if instruccion == "MFA_CODIGO":
                         codigo = self._pedir_codigo()
-                        self.socket.sendall(codigo.encode(self.codigo))
+                        self.socket.sendall(self._cifrar(codigo))
 
                         resultado = self.socket.recv(1024).decode(self.codigo)
 
@@ -143,7 +163,7 @@ class ClienteChat:
         Retorna True si el envio fue exitoso, False en caso de error.
         """
         try:
-            self.socket.sendall(mensaje.encode(self.codigo))
+            self.socket.sendall(self._cifrar(mensaje))
 
             #Registramos mensaje enviado
             mensajes.info(f"{self.nombre}: {mensaje}")
@@ -193,6 +213,14 @@ class ClienteChat:
         self.ejecutando = False
         try:
             if self.socket:
+                # Avisamos al servidor antes de cerrar para que limpie al usuario
+                # Sin esto, el servidor se queda con el nombre bloqueado hasta que
+                # detecta la desconexion, lo que causa el freeze al reconectar.
+                try:
+                    despedida = f"({__import__('utilerias').ahora()}) {self.nombre}: __SALIR__"
+                    self.socket.sendall(self._cifrar(despedida))
+                except Exception:
+                    pass  # Si ya no hay conexion, ignoramos
                 self.socket.close()
 
                 #Registramos cierre de conexion

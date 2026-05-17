@@ -23,6 +23,8 @@ import queue
 import utilerias as util
 import Mfa
 import logging
+from cryptography.hazmat.primitives.asymmetric import rsa, padding
+from cryptography.hazmat.primitives import serialization, hashes
 from bitacoras import(
     accesos,
     mfa,
@@ -40,6 +42,30 @@ logging.basicConfig(
     datefmt="%H:%M:%S"
 )
 log = logging.getLogger(__name__)
+
+
+"""
+Generacion del par de claves RSA del servidor.
+La clave privada se queda en el servidor para descifrar.
+La clave publica se manda a cada cliente al conectarse para que cifre.
+"""
+_clave_privada = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+_clave_publica_bytes = _clave_privada.public_key().public_bytes(
+    encoding=serialization.Encoding.PEM,
+    format=serialization.PublicFormat.SubjectPublicKeyInfo
+)
+
+
+def _descifrar(datos_cifrados):
+    """Descifra bytes recibidos del cliente con la clave privada RSA del servidor."""
+    return _clave_privada.decrypt(
+        datos_cifrados,
+        padding.OAEP(
+            mgf=padding.MGF1(algorithm=hashes.SHA256()),
+            algorithm=hashes.SHA256(),
+            label=None
+        )
+    )
 
 
 """
@@ -121,11 +147,20 @@ def manejar(cliente):
     global usuariosActivos # evita variable local
     while True:
         try: # si el cliente esta activo
-            datos = cliente.recv(1024) #El mensaje lo recibira del cliente
+            datos = cliente.recv(2048) #El mensaje lo recibira del cliente
             if not datos:
                 raise ConnectionResetError("El cliente cerro la conexion")
 
-            mensaje_str = datos.decode(CODEC) #ya lo decodifique
+            # Desciframos el mensaje con la clave privada RSA
+            try:
+                mensaje_str = _descifrar(datos).decode(CODEC)
+            except Exception:
+                # Si no se puede descifrar ignoramos el paquete
+                continue
+
+            # El cliente mando la senal de salida voluntaria, limpiamos inmediatamente
+            if "__SALIR__" in mensaje_str:
+                raise ConnectionResetError("El cliente se desconecto voluntariamente")
 
             #el formato del mensaje es: (fecha hora) nombre: texto
             #con limite de 5 splits para no partir el cuerpo del mensaje
@@ -198,11 +233,15 @@ def recibir():
 
         print(f"Conectados con {str(direccion)}") #Muestra quien se conecto
 
+        # Mandamos la clave publica RSA al cliente antes de cualquier otra cosa
+        cliente.send(_clave_publica_bytes)
+
         cliente.send("Nombre".encode(CODEC))
 
         #tratamos de recibir el nombre, si falla cerramos la conexion
         try:
-            texto = cliente.recv(1024).decode(CODEC)
+            datos_cifrados = cliente.recv(2048)
+            texto = _descifrar(datos_cifrados).decode(CODEC)
         except Exception as e:
             errores.error(f"Error recibiendo nombre de {direccion}: {e}")
             cliente.close()
