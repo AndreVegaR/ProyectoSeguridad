@@ -25,6 +25,7 @@ import Mfa
 import logging
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
 from cryptography.hazmat.primitives import serialization, hashes
+import struct
 from bitacoras import(
     accesos,
     mfa,
@@ -66,7 +67,23 @@ def _descifrar(datos_cifrados):
             label=None
         )
     )
+def enviar_bloque(cliente, datos: bytes):
+    tamano = struct.pack("!I", len(datos))
+    cliente.sendall(tamano + datos)
 
+
+def recibir_exactamente(cliente, cantidad):
+    datos = b""
+
+    while len(datos) < cantidad:
+        parte = cliente.recv(cantidad - len(datos))
+
+        if not parte:
+            raise ConnectionError("El cliente cerró la conexión.")
+
+        datos += parte
+
+    return datos
 
 """
 mensajes:
@@ -234,13 +251,13 @@ def recibir():
         print(f"Conectados con {str(direccion)}") #Muestra quien se conecto
 
         # Mandamos la clave publica RSA al cliente antes de cualquier otra cosa
-        cliente.send(_clave_publica_bytes)
+        enviar_bloque(cliente, _clave_publica_bytes)
 
-        cliente.send("Nombre".encode(CODEC))
+        cliente.sendall("Nombre".encode(CODEC))
 
         #tratamos de recibir el nombre, si falla cerramos la conexion
         try:
-            datos_cifrados = cliente.recv(2048)
+            datos_cifrados = recibir_exactamente(cliente, 256)
             texto = _descifrar(datos_cifrados).decode(CODEC)
         except Exception as e:
             errores.error(f"Error recibiendo nombre de {direccion}: {e}")
@@ -266,8 +283,8 @@ def recibir():
 
         #Si se quiere saltar lo del MFA, quitar estas tres lineas o ponerlas como comentario
         #if not verificar_mfa(cliente, nombre):
-        #    cliente.close()
-        #    continue
+        #  cliente.close()
+        #  continue
 
         nombres.append(nombre)
         clientes.append(cliente)
@@ -289,37 +306,58 @@ def recibir():
 
 
 def verificar_mfa(cliente, nombre):
+    try:
+        cliente.sendall("MFA_CORREO".encode(CODEC))
 
-    cliente.send("MFA_CORREO".encode(CODEC))
-    correo = cliente.recv(1024).decode(CODEC).strip()
-    log.info(f"Correo recibido de {nombre}: {correo}")
+        datos_correo = recibir_exactamente(cliente, 256)
+        correo = _descifrar(datos_correo).decode(CODEC).strip()
 
-    #registramos el MFA enviado en las bitacoras
-    mfa.info(f"Correo enviado a {correo} para {nombre}")
+        log.info(f"Correo recibido de {nombre}: {correo}")
 
-    if not Mfa.enviar_codigo(correo):
-        log.error(f"No se pudo enviar codigo MFA a {correo}")
-        cliente.send("MFA_ERROR".encode(CODEC))
+        # registramos el MFA enviado en las bitacoras
+        mfa.info(f"Correo enviado a {correo} para {nombre}")
+
+        if not correo:
+            log.error(f"Correo vacío recibido para MFA de {nombre}")
+            cliente.sendall("MFA_ERROR".encode(CODEC))
+            return False
+
+        if not Mfa.enviar_codigo(correo):
+            log.error(f"No se pudo enviar codigo MFA a {correo}")
+            cliente.sendall("MFA_ERROR".encode(CODEC))
+            return False
+
+        cliente.sendall("MFA_CODIGO".encode(CODEC))
+
+        datos_codigo = recibir_exactamente(cliente, 256)
+        codigo_ingresado = _descifrar(datos_codigo).decode(CODEC).strip()
+
+        log.debug(f"Codigo recibido de {nombre}: {codigo_ingresado}")
+
+        exito, motivo = Mfa.verificar_codigo(correo, codigo_ingresado)
+
+        if not exito:
+            # registramos el fallo de MFA en las bitacoras
+            mfa.warning(f"{nombre} fallo MFA: {motivo}")
+
+            log.warning(f"MFA fallido para {nombre}: {motivo}")
+            cliente.sendall(f"MFA_FALLO:{motivo}".encode(CODEC))
+            return False
+
+        log.info(f"MFA exitoso para {nombre}")
+        mfa.info(f"{nombre} autenticado correctamente")
+        return True
+
+    except Exception as e:
+        errores.error(f"Error durante MFA para {nombre}: {e}")
+        log.error(f"Error durante MFA para {nombre}: {e}")
+
+        try:
+            cliente.sendall("MFA_ERROR".encode(CODEC))
+        except:
+            pass
+
         return False
-
-    cliente.send("MFA_CODIGO".encode(CODEC))
-    codigo_ingresado = cliente.recv(1024).decode(CODEC).strip()
-    log.debug(f"Codigo recibido de {nombre}: {codigo_ingresado}")
-
-    exito, motivo = Mfa.verificar_codigo(correo, codigo_ingresado)
-    if not exito:
-
-        #registramos el fallo de MFA en las bitacoras
-        mfa.warning(f"{nombre} fallo MFA: {motivo}")
-
-        log.warning(f"MFA fallido para {nombre}: {motivo}")
-        cliente.send(f"MFA_FALLO:{motivo}".encode(CODEC))
-        return False
-
-    log.info(f"MFA exitoso para {nombre}")
-    mfa.info(f"{nombre} autenticado correctamente")
-    return True
-
 
 """
 Busca si un nombre ya existe en el registro de nombres

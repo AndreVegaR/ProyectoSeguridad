@@ -2,3 +2,36 @@
 2026-05-16 16:44:02,533 | ERROR | Error cargando imagen principal: couldn't open "potros-itson.png": no such file or directory
 2026-05-16 16:45:41,739 | ERROR | Error cargando imagen principal: couldn't open "potros-itson.png": no such file or directory
 2026-05-16 16:45:56,145 | ERROR | Error cargando imagen principal: couldn't open "potros-itson.png": no such file or directory
+2026-05-17 18:54:53,483 | ERROR | Error recibiendo mensaje: [WinError 10053] Se ha anulado una conexión establecida por el software en su equipo host
+2026-05-17 19:03:24,129 | ERROR | Error recibiendo mensaje: [WinError 10053] Se ha anulado una conexión establecida por el software en su equipo host
+2026-05-17 19:05:14,805 | ERROR | Error recibiendo mensaje: [WinError 10053] Se ha anulado una conexión establecida por el software en su equipo host
+2026-05-17 19:16:07,506 | ERROR | Error recibiendo mensaje: [WinError 10053] Se ha anulado una conexión establecida por el software en su equipo host
+2026-05-17 19:21:11,154 | ERROR | Error al iniciar cliente Alexander: [WinError 10061] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+2026-05-17 19:25:26,554 | ERROR | Error al iniciar cliente Noelia: timed out
+2026-05-17 19:25:30,745 | ERROR | Error recibiendo nombre de ('127.0.0.1', 53074): Ciphertext length must be equal to key size.
+2026-05-17 19:25:37,426 | ERROR | Error al iniciar cliente Noelia: timed out
+2026-05-17 19:25:38,689 | ERROR | Error recibiendo nombre de ('127.0.0.1', 63096): Ciphertext length must be equal to key size.
+2026-05-17 19:27:01,527 | ERROR | Error recibiendo mensaje: [WinError 10038] Se intentó realizar una operación en un elemento que no es un socket
+2026-05-17 19:27:08,352 | ERROR | Error al iniciar cliente yo: timed out
+2026-05-17 19:27:09,722 | ERROR | Error recibiendo nombre de ('127.0.0.1', 64392): Ciphertext length must be equal to key size.
+2026-05-17 19:27:39,437 | ERROR | Error al iniciar cliente yo: timed out
+2026-05-17 19:27:41,560 | ERROR | Error recibiendo nombre de ('127.0.0.1', 58592): Ciphertext length must be equal to key size.
+2026-05-17 19:37:31,758 | ERROR | Error al iniciar cliente Gamma: timed out
+2026-05-17 19:37:34,394 | ERROR | Error recibiendo nombre de ('192.168.1.4', 59001): Ciphertext length must be equal to key size.
+2026-05-17 19:37:40,828 | ERROR | Error al iniciar cliente Gamma: timed out
+2026-05-17 19:37:41,611 | ERROR | Error recibiendo nombre de ('192.168.1.4', 52379): Ciphertext length must be equal to key size.
+2026-05-17 19:38:52,376 | ERROR | Error al iniciar cliente batman: timed out
+2026-05-17 19:40:34,362 | ERROR | Error recibiendo nombre de ('127.0.0.1', 54575): Ciphertext length must be equal to key size.
+2026-05-17 19:47:46,774 | ERROR | Error recibiendo mensaje: [WinError 10038] Se intentó realizar una operación en un elemento que no es un socket
+2026-05-17 19:47:52,408 | ERROR | Error recibiendo mensaje: [WinError 10038] Se intentó realizar una operación en un elemento que no es un socket
+2026-05-17 19:47:54,616 | ERROR | Error recibiendo mensaje: [WinError 10038] Se intentó realizar una operación en un elemento que no es un socket
+2026-05-17 19:47:56,416 | ERROR | Error recibiendo mensaje: [WinError 10038] Se intentó realizar una operación en un elemento que no es un socket
+2026-05-17 19:47:58,319 | ERROR | Error recibiendo mensaje: [WinError 10038] Se intentó realizar una operación en un elemento que no es un socket
+2026-05-17 19:50:10,428 | ERROR | Error recibiendo mensaje: [WinError 10038] Se intentó realizar una operación en un elemento que no es un socket
+2026-05-17 19:50:14,408 | ERROR | Error durante MFA para Carlos: El cliente cerró la conexión.
+2026-05-17 19:50:14,408 | ERROR | Error al iniciar cliente Carlos: Debes ingresar un correo para MFA.
+2026-05-17 19:50:15,548 | ERROR | Error conectando Carlos: No se pudo conectar al servidor
+2026-05-17 19:50:21,345 | ERROR | Error durante MFA para Carlos: El cliente cerró la conexión.
+2026-05-17 19:50:21,346 | ERROR | Error al iniciar cliente Carlos: Debes ingresar un correo para MFA.
+2026-05-17 19:50:22,315 | ERROR | Error conectando Carlos: No se pudo conectar al servidor
+2026-05-17 19:50:54,741 | ERROR | Error recibiendo mensaje: [WinError 10038] Se intentó realizar una operación en un elemento que no es un socket

@@ -20,7 +20,7 @@ import socket
 import utilerias as util
 from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.hazmat.primitives.asymmetric import padding
-
+import struct
 #Bitacoras del sistema
 from bitacoras import accesos, mensajes, errores, mfa
 
@@ -50,7 +50,19 @@ class ClienteChat:
                 label=None
             )
         )
+    def _recibir_exactamente(self, cantidad):
+        datos = b""
 
+        while len(datos) < cantidad:
+            parte = self.socket.recv(cantidad - len(datos))
+
+            if not parte:
+                raise ConnectionError("Conexión cerrada mientras se recibían datos.")
+
+            datos += parte
+
+        return datos
+    
     def iniciar(self, nombre):
         """
         Inicia la conexion del cliente con el servidor.
@@ -68,9 +80,13 @@ class ClienteChat:
             self.ejecutando = True
             return True
         except Exception as e:
-
-            #Registramos error de conexion
             errores.error(f"Error al iniciar cliente {nombre}: {e}")
+
+            try:
+                if self.socket:
+                    self.socket.close()
+            except:
+                pass
 
             print(f"Error al iniciar cliente: {e}")
             return False
@@ -83,13 +99,14 @@ class ClienteChat:
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.settimeout(5)
         self.socket.connect((self.ip, self.puerto))
-        self.socket.settimeout(None)
+        
 
         try:
             # Primero recibimos la clave publica RSA del servidor (viene en PEM, ~450 bytes)
-            pem = b""
-            while b"-----END PUBLIC KEY-----" not in pem:
-                pem += self.socket.recv(1024)
+            tamano_bytes = self._recibir_exactamente(4)
+            tamano = struct.unpack("!I", tamano_bytes)[0]
+
+            pem = self._recibir_exactamente(tamano)
             self._clave_publica = serialization.load_pem_public_key(pem)
 
             datos = self.socket.recv(1024).decode(self.codigo)
@@ -110,38 +127,43 @@ class ClienteChat:
                 #el servidor pide el MFA
                 if respuesta == "MFA_CORREO":
                     correo = self._pedir_correo()
+
+                    if not correo:
+                        self.socket.close()
+                        raise ConnectionRefusedError("Debes ingresar un correo para MFA.")
+
                     self.socket.sendall(self._cifrar(correo))
 
                     instruccion = self.socket.recv(1024).decode(self.codigo)
 
                     if instruccion == "MFA_ERROR":
-
-                        #Registramos error al enviar MFA
                         errores.error(f"No se pudo enviar MFA a {correo}")
-
                         self.socket.close()
                         raise ConnectionRefusedError("No se pudo enviar el codigo MFA.")
 
-                    if instruccion == "MFA_CODIGO":
-                        codigo = self._pedir_codigo()
-                        self.socket.sendall(self._cifrar(codigo))
+                    if instruccion != "MFA_CODIGO":
+                        self.socket.close()
+                        raise ConnectionRefusedError(f"Respuesta inesperada del servidor: {instruccion}")
 
-                        resultado = self.socket.recv(1024).decode(self.codigo)
+                    codigo = self._pedir_codigo()
 
-                        if resultado.startswith("MFA_FALLO"):
+                    if not codigo:
+                        self.socket.close()
+                        raise ConnectionRefusedError("Debes ingresar el codigo MFA.")
 
-                            #Registramos fallo MFA
-                            mfa.warning(f"{self.nombre} fallo autenticacion")
+                    self.socket.sendall(self._cifrar(codigo))
 
-                            motivo = resultado.split(":", 1)[1] if ":" in resultado else "desconocido"
-                            self.socket.close()
-                            raise ConnectionRefusedError(f"Codigo MFA invalido: {motivo}")
+                    resultado = self.socket.recv(1024).decode(self.codigo)
 
-                        else:
+                    if resultado.startswith("MFA_FALLO"):
+                        mfa.warning(f"{self.nombre} fallo autenticacion")
 
-                            #Registramos MFA exitoso
-                            mfa.info(f"{self.nombre} autenticado correctamente")
+                        motivo = resultado.split(":", 1)[1] if ":" in resultado else "desconocido"
+                        self.socket.close()
+                        raise ConnectionRefusedError(f"Codigo MFA invalido: {motivo}")
 
+                    mfa.info(f"{self.nombre} autenticado correctamente")
+                self.socket.settimeout(None)
         except ConnectionRefusedError:
             raise
 
@@ -211,24 +233,34 @@ class ClienteChat:
         Cierra el socket de red de forma segura.
         """
         self.ejecutando = False
+
+        sock = self.socket
+        self.socket = None
+
         try:
-            if self.socket:
-                # Avisamos al servidor antes de cerrar para que limpie al usuario
-                # Sin esto, el servidor se queda con el nombre bloqueado hasta que
-                # detecta la desconexion, lo que causa el freeze al reconectar.
+            if sock:
                 try:
+                    sock.settimeout(1)
+
                     despedida = f"({__import__('utilerias').ahora()}) {self.nombre}: __SALIR__"
-                    self.socket.sendall(self._cifrar(despedida))
+                    sock.sendall(self._cifrar(despedida))
+
+                    try:
+                        sock.shutdown(socket.SHUT_RDWR)
+                    except Exception:
+                        pass
+
                 except Exception:
-                    pass  # Si ya no hay conexion, ignoramos
-                self.socket.close()
+                    pass
 
-                #Registramos cierre de conexion
+                finally:
+                    try:
+                        sock.close()
+                    except Exception:
+                        pass
+
                 accesos.info(f"{self.nombre} cerro conexion")
-
         except Exception as e:
-
-            #Registramos error cerrando socket
             errores.error(f"Error cerrando conexion: {e}")
 
 
@@ -246,7 +278,7 @@ class VentanaChat:
 
         if not self.cliente.iniciar(nombre):
             messagebox.showerror("Error", "No se pudo conectar al servidor")
-            return
+            raise ConnectionError("No se pudo conectar al servidor")
 
         self.crear_ventana()
         self.configurar_interfaz()

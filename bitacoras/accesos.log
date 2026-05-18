@@ -1,2 +1,124 @@
 2026-05-14 22:14:27,489 | INFO | noelia intentando conectar a 127.0.0.1:6000
 2026-05-16 16:46:18,582 | INFO | papaleta intentando conectar a 192.168.1.74:90
+2026-05-17 18:50:11,572 | INFO | Usuario nuevo registrado: Willian
+2026-05-17 18:50:11,573 | INFO | Willian intentando conectar a 127.0.0.1:6000
+2026-05-17 18:53:18,143 | INFO | Usuario nuevo registrado: yo
+2026-05-17 18:53:18,144 | INFO | yo intentando conectar a 127.0.0.1:5000
+2026-05-17 18:53:18,153 | INFO | yo conectado desde 127.0.0.1
+2026-05-17 18:53:18,154 | INFO | yo conectado a 127.0.0.1:5000
+2026-05-17 18:53:18,179 | INFO | yo conectado correctamente
+2026-05-17 18:54:53,483 | INFO | yo cerro conexion
+2026-05-17 18:54:53,483 | INFO | yo se desconecto
+2026-05-17 19:03:20,434 | INFO | Usuario nuevo registrado: El pepe
+2026-05-17 19:03:20,435 | INFO | El pepe intentando conectar a 127.0.0.1:6000
+2026-05-17 19:03:20,443 | INFO | El conectado desde 127.0.0.1
+2026-05-17 19:03:20,444 | INFO | El pepe conectado a 127.0.0.1:6000
+2026-05-17 19:03:20,451 | INFO | El pepe conectado correctamente
+2026-05-17 19:03:24,129 | INFO | El pepe cerro conexion
+2026-05-17 19:03:24,130 | INFO | El se desconecto
+2026-05-17 19:03:38,252 | INFO | Usuario nuevo registrado: Andre
+2026-05-17 19:03:38,252 | INFO | Andre intentando conectar a 127.0.0.1:6000
+2026-05-17 19:05:10,449 | INFO | Usuario nuevo registrado: Gael
+2026-05-17 19:05:10,450 | INFO | Gael intentando conectar a 127.0.0.1:5000
+2026-05-17 19:05:10,457 | INFO | Gael conectado desde 127.0.0.1
+2026-05-17 19:05:10,458 | INFO | Gael conectado a 127.0.0.1:5000
+2026-05-17 19:05:10,468 | INFO | Gael conectado correctamente
+2026-05-17 19:05:14,805 | INFO | Gael cerro conexion
+2026-05-17 19:05:14,806 | INFO | Gael se desconecto
+2026-05-17 19:05:18,840 | INFO | Login exitoso para Gael
+2026-05-17 19:05:18,840 | INFO | Gael intentando conectar a 127.0.0.1:5000
+2026-05-17 19:15:07,283 | INFO | Usuario nuevo registrado: Abelardo
+2026-05-17 19:15:07,284 | INFO | Abelardo intentando conectar a 127.0.0.1:6000
+2026-05-17 19:15:55,318 | INFO | Abelardo conectado desde 127.0.0.1
+2026-05-17 19:15:55,321 | INFO | Abelardo conectado a 127.0.0.1:6000
+2026-05-17 19:15:55,345 | INFO | Abelardo conectado correctamente
+2026-05-17 19:16:07,506 | INFO | Abelardo cerro conexion
+2026-05-17 19:16:07,507 | INFO | Abelardo se desconecto
+2026-05-17 19:16:19,921 | INFO | Login exitoso para Abelardo
+2026-05-17 19:16:19,922 | INFO | Abelardo intentando conectar a 127.0.0.1:6000
+2026-05-17 19:21:09,091 | INFO | Usuario nuevo registrado: Alexander
+2026-05-17 19:21:09,092 | INFO | Alexander intentando conectar a 127.0.0.1:6000
+2026-05-17 19:21:14,406 | INFO | Alexander conectado correctamente
+2026-05-17 19:22:07,656 | INFO | Usuario nuevo registrado: Burciaga
+2026-05-17 19:22:07,657 | INFO | Burciaga intentando conectar a 127.0.0.1:6000
+2026-05-17 19:25:21,510 | INFO | Usuario nuevo registrado: Noelia
+2026-05-17 19:25:21,510 | INFO | Noelia intentando conectar a 127.0.0.1:5000
+2026-05-17 19:25:30,746 | INFO | Noelia conectado correctamente
+2026-05-17 19:25:32,401 | INFO | Login exitoso para Noelia
+2026-05-17 19:25:32,401 | INFO | Noelia intentando conectar a 127.0.0.1:5000
+2026-05-17 19:25:38,689 | INFO | Noelia conectado correctamente
+2026-05-17 19:26:57,809 | INFO | Usuario nuevo registrado: yo
+2026-05-17 19:26:57,810 | INFO | yo intentando conectar a 127.0.0.1:5000
+2026-05-17 19:26:57,819 | INFO | yo conectado desde 127.0.0.1
+2026-05-17 19:26:57,820 | INFO | yo conectado a 127.0.0.1:5000
+2026-05-17 19:26:57,829 | INFO | yo conectado correctamente
+2026-05-17 19:27:01,527 | INFO | yo cerro conexion
+2026-05-17 19:27:01,528 | INFO | yo se desconecto
+2026-05-17 19:27:03,316 | INFO | Login exitoso para yo
+2026-05-17 19:27:03,317 | INFO | yo intentando conectar a 127.0.0.1:5000
+2026-05-17 19:27:09,722 | INFO | yo conectado correctamente
+2026-05-17 19:27:34,415 | INFO | Login exitoso para yo
+2026-05-17 19:27:34,415 | INFO | yo intentando conectar a 127.0.0.1:5000
+2026-05-17 19:27:41,561 | INFO | yo conectado correctamente
+2026-05-17 19:37:26,723 | INFO | Usuario nuevo registrado: Gamma
+2026-05-17 19:37:26,724 | INFO | Gamma intentando conectar a 192.168.1.4:111
+2026-05-17 19:37:34,394 | INFO | Gamma conectado correctamente
+2026-05-17 19:37:35,797 | INFO | Login exitoso para Gamma
+2026-05-17 19:37:35,797 | INFO | Gamma intentando conectar a 192.168.1.4:111
+2026-05-17 19:37:41,611 | INFO | Gamma conectado correctamente
+2026-05-17 19:38:47,335 | INFO | Usuario nuevo registrado: batman
+2026-05-17 19:38:47,336 | INFO | batman intentando conectar a 127.0.0.1:111
+2026-05-17 19:40:34,362 | INFO | batman conectado correctamente
+2026-05-17 19:47:32,842 | INFO | Usuario nuevo registrado: Sabila
+2026-05-17 19:47:32,843 | INFO | Sabila intentando conectar a 127.0.0.1:5000
+2026-05-17 19:47:32,897 | INFO | Sabila conectado desde 127.0.0.1
+2026-05-17 19:47:32,898 | INFO | Sabila conectado a 127.0.0.1:5000
+2026-05-17 19:47:32,908 | INFO | Sabila conectado correctamente
+2026-05-17 19:47:46,774 | INFO | Sabila cerro conexion
+2026-05-17 19:47:46,775 | INFO | Sabila se desconecto
+2026-05-17 19:47:50,776 | INFO | Login exitoso para Sabila
+2026-05-17 19:47:50,777 | INFO | Sabila intentando conectar a 127.0.0.1:5000
+2026-05-17 19:47:50,796 | INFO | Sabila conectado desde 127.0.0.1
+2026-05-17 19:47:50,797 | INFO | Sabila conectado a 127.0.0.1:5000
+2026-05-17 19:47:50,808 | INFO | Sabila conectado correctamente
+2026-05-17 19:47:52,408 | INFO | Sabila cerro conexion
+2026-05-17 19:47:52,409 | INFO | Sabila se desconecto
+2026-05-17 19:47:53,582 | INFO | Login exitoso para Sabila
+2026-05-17 19:47:53,582 | INFO | Sabila intentando conectar a 127.0.0.1:5000
+2026-05-17 19:47:53,585 | INFO | Sabila conectado desde 127.0.0.1
+2026-05-17 19:47:53,585 | INFO | Sabila conectado a 127.0.0.1:5000
+2026-05-17 19:47:53,595 | INFO | Sabila conectado correctamente
+2026-05-17 19:47:54,616 | INFO | Sabila cerro conexion
+2026-05-17 19:47:54,618 | INFO | Sabila se desconecto
+2026-05-17 19:47:55,563 | INFO | Login exitoso para Sabila
+2026-05-17 19:47:55,564 | INFO | Sabila intentando conectar a 127.0.0.1:5000
+2026-05-17 19:47:55,567 | INFO | Sabila conectado desde 127.0.0.1
+2026-05-17 19:47:55,567 | INFO | Sabila conectado a 127.0.0.1:5000
+2026-05-17 19:47:55,578 | INFO | Sabila conectado correctamente
+2026-05-17 19:47:56,415 | INFO | Sabila cerro conexion
+2026-05-17 19:47:56,416 | INFO | Sabila se desconecto
+2026-05-17 19:47:57,285 | INFO | Login exitoso para Sabila
+2026-05-17 19:47:57,286 | INFO | Sabila intentando conectar a 127.0.0.1:5000
+2026-05-17 19:47:57,289 | INFO | Sabila conectado desde 127.0.0.1
+2026-05-17 19:47:57,289 | INFO | Sabila conectado a 127.0.0.1:5000
+2026-05-17 19:47:57,298 | INFO | Sabila conectado correctamente
+2026-05-17 19:47:58,319 | INFO | Sabila cerro conexion
+2026-05-17 19:47:58,320 | INFO | Sabila se desconecto
+2026-05-17 19:49:11,722 | INFO | Usuario nuevo registrado: Carlos
+2026-05-17 19:49:11,723 | INFO | Carlos intentando conectar a 127.0.0.1:111
+2026-05-17 19:49:50,437 | INFO | Carlos conectado desde 127.0.0.1
+2026-05-17 19:49:50,439 | INFO | Carlos conectado a 127.0.0.1:111
+2026-05-17 19:49:50,459 | INFO | Carlos conectado correctamente
+2026-05-17 19:50:10,427 | INFO | Carlos cerro conexion
+2026-05-17 19:50:10,428 | INFO | Carlos se desconecto
+2026-05-17 19:50:12,932 | INFO | Login exitoso para Carlos
+2026-05-17 19:50:12,933 | INFO | Carlos intentando conectar a 127.0.0.1:111
+2026-05-17 19:50:19,972 | INFO | Login exitoso para Carlos
+2026-05-17 19:50:19,973 | INFO | Carlos intentando conectar a 127.0.0.1:111
+2026-05-17 19:50:26,773 | INFO | Login exitoso para Carlos
+2026-05-17 19:50:26,774 | INFO | Carlos intentando conectar a 127.0.0.1:111
+2026-05-17 19:50:53,460 | INFO | Carlos conectado desde 127.0.0.1
+2026-05-17 19:50:53,462 | INFO | Carlos conectado a 127.0.0.1:111
+2026-05-17 19:50:53,481 | INFO | Carlos conectado correctamente
+2026-05-17 19:50:54,740 | INFO | Carlos cerro conexion
+2026-05-17 19:50:54,741 | INFO | Carlos se desconecto

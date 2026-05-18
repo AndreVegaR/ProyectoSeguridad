@@ -25,6 +25,7 @@ import socket       # Conecta dispositivos mediante cliente-servidor
 import threading    # Ejecuta paralelamente
 import utilerias as util  # Funciones varias
 
+evento_conectado = threading.Event()
 
 """Encapsula todo en una función para llamarla desde menu.py"""
 def iniciar(mostrar_funcion):
@@ -59,26 +60,51 @@ def conectar(ip, puerto):
 def recibir(cliente, nombre, mostrar_funcion):
     while True:
         try:
-            texto = cliente.recv(1024).decode(util.codigo)  # Mensaje decodificado de 1024 bytes mediante ASCII
-            if texto == "Nombre: ":  # El servidor pide el nombre al cliente
+            texto = cliente.recv(1024).decode(util.codigo)
+            if not texto:
+                continue
+            # El servidor pide el nombre
+            if texto == "Nombre":
                 cliente.send(nombre.encode(util.codigo))
+            # El servidor pide el correo para MFA
+            elif texto == "MFA_CORREO":
+                correo = input("Ingresa tu correo para MFA: ")
+                cliente.send(correo.encode(util.codigo))
+            # El servidor pide el código MFA
+            elif texto == "MFA_CODIGO":
+                codigo = input("Ingresa el código MFA recibido: ")
+                cliente.send(codigo.encode(util.codigo))
+            # Error al enviar el correo MFA
+            elif texto == "MFA_ERROR":
+                mostrar_funcion("Error: no se pudo enviar el código MFA.")
+                cliente.close()
+                break
+            # Código incorrecto, expirado o inexistente
+            elif texto.startswith("MFA_FALLO"):
+                motivo = texto.split(":", 1)[1] if ":" in texto else "desconocido"
+                mostrar_funcion(f"MFA fallido. Motivo: {motivo}")
+                cliente.close()
+                break
+            # Ya terminó el login correctamente
+            elif texto == "Conectado al servidor":
+                evento_conectado.set()
+                mostrar_funcion(texto)
+            # Cualquier otro mensaje normal del chat
             else:
-                if not texto:
-                    continue
-                else:
-                    mostrar_funcion(texto)  #USO DE LA FUNCIÓN PASADA COMO PARÁMETRO
+                mostrar_funcion(texto)
         except Exception as e:
-            mostrar_funcion(f"Error: {e}")  # Usamos también la función para mostrar el error
-            cliente.close()  # Si hay un error, cierra el cliente y rompe el bucle
+            mostrar_funcion(f"Error: {e}")
+            cliente.close()
             break
 
 
 """Envía mensajes al servidor TCP"""
 def escribir(cliente, nombre):
+    evento_conectado.wait()
     while True:
-        texto = input("")  # Contenido del mensaje
-        mensaje = f"({util.ahora()}) {nombre}: {texto}"  # Mensaje con emisor y fecha
-        cliente.send(mensaje.encode(util.codigo))  # Codifica dicho mensaje con ASCII
+        texto = input("")
+        mensaje = f"({util.ahora()}) {nombre}: {texto}"
+        cliente.send(mensaje.encode(util.codigo))
 
 
 """Inserta los métodos en hilos e inicia su funcionamiento con .start()"""
