@@ -35,3 +35,5 @@
 2026-05-17 19:50:21,346 | ERROR | Error al iniciar cliente Carlos: Debes ingresar un correo para MFA.
 2026-05-17 19:50:22,315 | ERROR | Error conectando Carlos: No se pudo conectar al servidor
 2026-05-17 19:50:54,741 | ERROR | Error recibiendo mensaje: [WinError 10038] Se intentó realizar una operación en un elemento que no es un socket
+2026-05-17 23:33:39,983 | ERROR | Error al iniciar cliente Andreiy: timed out
+2026-05-17 23:33:41,309 | ERROR | Error conectando Andreiy: No se pudo conectar al servidor

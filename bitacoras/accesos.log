@@ -122,3 +122,30 @@
 2026-05-17 19:50:53,481 | INFO | Carlos conectado correctamente
 2026-05-17 19:50:54,740 | INFO | Carlos cerro conexion
 2026-05-17 19:50:54,741 | INFO | Carlos se desconecto
+2026-05-17 23:32:42,212 | INFO | Usuario nuevo registrado: Willian
+2026-05-17 23:32:42,213 | INFO | Willian intentando conectar a 127.0.0.1:5000
+2026-05-17 23:32:42,246 | INFO | Willian conectado desde 127.0.0.1
+2026-05-17 23:32:42,247 | INFO | Willian conectado a 127.0.0.1:5000
+2026-05-17 23:32:42,261 | INFO | Willian conectado correctamente
+2026-05-17 23:32:57,599 | INFO | Usuario nuevo registrado: Abelardo
+2026-05-17 23:32:57,599 | INFO | Abelardo intentando conectar a 127.0.0.1:5000
+2026-05-17 23:32:57,623 | INFO | Abelardo conectado desde 127.0.0.1
+2026-05-17 23:32:57,623 | INFO | Abelardo conectado a 127.0.0.1:5000
+2026-05-17 23:32:57,632 | INFO | Abelardo conectado correctamente
+2026-05-17 23:33:06,541 | INFO | Usuario nuevo registrado: Menchoco
+2026-05-17 23:33:06,542 | INFO | Menchoco intentando conectar a 127.0.0.1:5000
+2026-05-17 23:33:06,544 | INFO | Menchoco conectado desde 127.0.0.1
+2026-05-17 23:33:06,545 | INFO | Menchoco conectado a 127.0.0.1:5000
+2026-05-17 23:33:06,553 | INFO | Menchoco conectado correctamente
+2026-05-17 23:33:12,696 | INFO | Usuario nuevo registrado: Noelia
+2026-05-17 23:33:12,697 | INFO | Noelia intentando conectar a 127.0.0.1:5000
+2026-05-17 23:33:12,700 | INFO | Noelia conectado desde 127.0.0.1
+2026-05-17 23:33:12,701 | INFO | Noelia conectado a 127.0.0.1:5000
+2026-05-17 23:33:12,710 | INFO | Noelia conectado correctamente
+2026-05-17 23:33:19,985 | INFO | Usuario nuevo registrado: Africano
+2026-05-17 23:33:19,986 | INFO | Africano intentando conectar a 127.0.0.1:5000
+2026-05-17 23:33:20,007 | INFO | Africano conectado desde 127.0.0.1
+2026-05-17 23:33:20,010 | INFO | Africano conectado a 127.0.0.1:5000
+2026-05-17 23:33:20,020 | INFO | Africano conectado correctamente
+2026-05-17 23:33:34,967 | INFO | Usuario nuevo registrado: Andreiy
+2026-05-17 23:33:34,968 | INFO | Andreiy intentando conectar a 127.0.0.1:5000
