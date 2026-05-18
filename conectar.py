@@ -22,6 +22,7 @@ import tkinter as tk # Interfaz gráfica
 from tkinter import messagebox as mb # Ventanas con mensajes de advertencia y error
 import logging
 
+#importa los archivos de las bitácoras pertinentes
 from bitacoras import(
     accesos,
     errores,
@@ -61,7 +62,7 @@ def crearFrame(ventana, frameMenu):
     # Frame de fondo que cubre toda la ventana
     framePrincipal = tk.Frame(ventana, bg=util.colorFondo)
 
-    # Panel tipo tarjeta centrado — mismo estilo que el menú
+    # Panel con el mismo estilo que el menú
     panel = tk.Frame(framePrincipal, bg="#161b22")
     panel.place(relx=0.5, rely=0.5, anchor="center", width=480)
 
@@ -97,11 +98,11 @@ def crearFrame(ventana, frameMenu):
     campoNombre = util.frameInfo(contenido, "Nombre de usuario", 20)          # Pide usuario
     campoPass   = util.frameInfo(contenido, "Contraseña", 20, ocultar=True)   # Pide contraseña
 
-    # Label para mostrar errores inline sin interrumpir con popups
+    # Label para mostrar los errores abajito sin usar dialogs
     lbl_error = tk.Label(contenido, text="", font=(util.fuente, 10), bg="#161b22", fg="#f85149", wraplength=380, justify="center")
     lbl_error.pack(pady=(8, 0))
 
-    # Contador de intentos fallidos de contraseña (lista para mutabilidad en closure)
+    # Contador de intentos fallidos de contraseña , sólo se admiten tres intentos fallidos
     intentos_fallidos = [0]
     LIMITE_INTENTOS = 3
 
@@ -119,10 +120,10 @@ def crearFrame(ventana, frameMenu):
 
             lbl_error.config(text="Llene todos los campos")
             return
-
+        #Si el puerto y la ip no son válidos:
         if not validar(ip, puerto):
-
             #Registramos intento inválido
+            #Se guarda en el archivo de logs sospechosos...
             sospechosos.warning(
                 f"Intento invalido: IP: {ip} | Puerto: {puerto}"
             )
@@ -134,13 +135,16 @@ def crearFrame(ventana, frameMenu):
         # Si el usuario ya existe, verificamos su contraseña.
         # Si no existe aun, lo registramos con esa contraseña (primer acceso).
         if util.usuario_existe(nombre):
+            #Si la contraseña no coincide con la guardada en el archivo .dat se registra un intento fallido
             if not util.verificar_contrasena(nombre, contrasena):
                 intentos_fallidos[0] += 1
                 restantes = LIMITE_INTENTOS - intentos_fallidos[0]
+                #Se guarda en el archivo sospechoso
                 sospechosos.warning(
                     f"Contraseña incorrecta para {nombre} "
                     f"(intento {intentos_fallidos[0]}/{LIMITE_INTENTOS})"
                 )
+                #Si se supera el número de intentos fallidos
                 if intentos_fallidos[0] >= LIMITE_INTENTOS:
                     lbl_error.config(
                         text="Límite de intentos alcanzado. Usa 'Regresar' e intenta de nuevo."
@@ -157,24 +161,27 @@ def crearFrame(ventana, frameMenu):
             intentos_fallidos[0] = 0  # reiniciamos si el login fue exitoso
             accesos.info(f"Login exitoso para {nombre}")
         else:
+            #Si el usuario no existe lo registramos y ya, la próxima vez que intente entrar ahora si tendrá 
+            #que pasar por todas las validaciones de arriba
             util.registrar_usuario(nombre, contrasena)
             accesos.info(f"Usuario nuevo registrado: {nombre}")
 
         lbl_error.config(text="") # limpiamos el error si todo está bien
 
+        #Define variables globales del archivo
         global ip_servidor, puerto_servidor, nombre_usuario
         ip_servidor     = ip
+        #Convierte el puerto ingresado a entero
         puerto_servidor = int(puerto)
         nombre_usuario  = nombre
-
         try:
-
             #Registramos intento de conexión válido
             accesos.info(
                 f"{nombre_usuario} intentando conectar a {ip_servidor}:{puerto_servidor}"
             )
 
             import chat
+            #Inicializa la ventana del chat
             chat.iniciar_chat(
                 ventana,
                 ip_servidor,
@@ -195,9 +202,9 @@ def crearFrame(ventana, frameMenu):
             )
 
             lbl_error.config(text=f"No se pudo conectar: {e}")
-
+    #Crea el botón para conectarse al chat
     util.boton(contenido, " Conectarse via TCP", clickConectarse)
-
+    #Crea el botón para volver
     util.boton(
         contenido,
         "Regresar",

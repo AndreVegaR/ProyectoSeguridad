@@ -4,10 +4,6 @@ servidorTCP.py
 Descripción:
 - Servidor TCP del chat seguro
 
-Funcionamiento:
-- Acepta conexiones de clientes, valida nombres, sanitiza mensajes
-- Maneja mensajes publicos y privados mediante hilos
-- Registra eventos en bitacoras
 
 Autores:
 - Willian Alexander Tolano Fierros
@@ -68,13 +64,16 @@ def _descifrar(datos_cifrados):
         )
     )
 def enviar_bloque(cliente, datos: bytes):
+    #Calcula cuantos bytes mide el bloque de datos
     tamano = struct.pack("!I", len(datos))
+    #Envia el tamaño más los datos
     cliente.sendall(tamano + datos)
 
 
 def recibir_exactamente(cliente, cantidad):
+    #Se crea una variable de bytes vacía
     datos = b""
-
+    #Mientras todavía no se hayan recibido todos los bytes necesarios, el ciclo sigue.
     while len(datos) < cantidad:
         parte = cliente.recv(cantidad - len(datos))
 
@@ -304,7 +303,7 @@ def recibir():
             usuariosActivos += 1
         hilo.start()
 
-
+#Método que verifica una autenticación multifactor
 def verificar_mfa(cliente, nombre):
     try:
         cliente.sendall("MFA_CORREO".encode(CODEC))
@@ -316,12 +315,12 @@ def verificar_mfa(cliente, nombre):
 
         # registramos el MFA enviado en las bitacoras
         mfa.info(f"Correo enviado a {correo} para {nombre}")
-
+        #Si no se recibe ningún correo:
         if not correo:
             log.error(f"Correo vacío recibido para MFA de {nombre}")
             cliente.sendall("MFA_ERROR".encode(CODEC))
             return False
-
+        #Si no se pudo envíar el código
         if not Mfa.enviar_codigo(correo):
             log.error(f"No se pudo enviar codigo MFA a {correo}")
             cliente.sendall("MFA_ERROR".encode(CODEC))
@@ -347,11 +346,10 @@ def verificar_mfa(cliente, nombre):
         log.info(f"MFA exitoso para {nombre}")
         mfa.info(f"{nombre} autenticado correctamente")
         return True
-
+    #Atrapa cualquier excepcion aventada durante la verificación del MFA
     except Exception as e:
         errores.error(f"Error durante MFA para {nombre}: {e}")
         log.error(f"Error durante MFA para {nombre}: {e}")
-
         try:
             cliente.sendall("MFA_ERROR".encode(CODEC))
         except:

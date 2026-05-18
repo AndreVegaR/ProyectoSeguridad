@@ -102,7 +102,7 @@ class ClienteChat:
         
 
         try:
-            # Primero recibimos la clave publica RSA del servidor (viene en PEM, ~450 bytes)
+            # Primero recibimos la clave publica RSA del servidor
             tamano_bytes = self._recibir_exactamente(4)
             tamano = struct.unpack("!I", tamano_bytes)[0]
 
@@ -127,7 +127,7 @@ class ClienteChat:
                 #el servidor pide el MFA
                 if respuesta == "MFA_CORREO":
                     correo = self._pedir_correo()
-
+                    #Si no se proporcionó un correo
                     if not correo:
                         self.socket.close()
                         raise ConnectionRefusedError("Debes ingresar un correo para MFA.")
@@ -135,7 +135,7 @@ class ClienteChat:
                     self.socket.sendall(self._cifrar(correo))
 
                     instruccion = self.socket.recv(1024).decode(self.codigo)
-
+                    #Aquí es chat decide que hacer con respuestas de error relacionadas al MFA
                     if instruccion == "MFA_ERROR":
                         errores.error(f"No se pudo enviar MFA a {correo}")
                         self.socket.close()

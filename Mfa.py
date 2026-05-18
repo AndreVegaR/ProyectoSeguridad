@@ -1,14 +1,9 @@
 """
 mfa.py
  
-Descripción:
-- Genera un código de 6 dígitos, lo envía al correo del usuario via Gmail
-  y lo valida con tiempo de expiración de 5 minutos.
- 
-Funcionamiento:
-- generar_codigo(): crea un código numérico aleatorio de 6 dígitos
-- enviar_codigo(correo): genera el código, lo guarda con timestamp y lo manda por correo
-- verificar_codigo(correo, codigo_ingresado): valida que el código sea correcto y no haya expirado
+
+Genera un código de 6 dígitos, lo envía al correo del usuario via Gmail
+y lo valida con tiempo de expiración de 5 minutos.
  
 Autores:
 - Willian Alexander Tolano Fierros
@@ -75,7 +70,7 @@ def enviar_codigo(correo: str) -> bool:
         mensaje["From"]    = CORREO_REMITENTE
         mensaje["To"]      = correo
         mensaje["Subject"] = "PotroChat - Código de verificación"
- 
+        #Así es como se verá el mensaje ya cuando sea envíado al correo correspondiente
         cuerpo = (
             f"Hola,\n\n"
             f"Tu código de verificación para entrar al PotroChat es:\n\n"

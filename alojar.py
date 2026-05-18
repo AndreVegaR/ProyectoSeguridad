@@ -21,14 +21,14 @@ import threading
 from bitacoras import servidor, errores, sospechosos
 
 
-""" Verificación del protocolo: regresa la función iniciar según TCP/UDP """
+""" Verificación del protocolo: regresa la función iniciar según TCP"""
 def verificacionProtocolo(protocolo):
     global protocolo_servidor
     protocolo_servidor = "TCP"
     return servidorTCP.iniciar
 
 
-"""Oculta el menú y muestra esta pantalla"""
+"""Oculta el menú y muestra esta pantalla (la pantalla de alojar)"""
 def mostrarFrame(ventana, frameMenu):
     frameMenu.pack_forget()
     frameAlojar = crearFrame(ventana, frameMenu)
@@ -43,20 +43,20 @@ def regresar(frameAlojar, frameMenu):
 
 """Crea lo gráfico para la pantalla de alojar servidor"""
 def crearFrame(ventana, frameMenu):
-    # Frame de fondo que cubre toda la ventana
+    # Crea el frame principal, 
     framePrincipal = tk.Frame(ventana, bg=util.colorFondo)
 
-    # Panel tipo tarjeta centrado — acento verde porque es el lado servidor
+    # Panel centrado
     panel = tk.Frame(framePrincipal, bg="#161b22")
     panel.place(relx=0.5, rely=0.5, anchor="center", width=480)
 
-    # Barra verde superior (verde = servidor, azul = cliente)
+    # Barra verde de arriba
     tk.Frame(panel, bg="#238636", height=4).pack(fill="x")
 
     contenido = tk.Frame(panel, bg="#161b22", padx=36, pady=28)
     contenido.pack(fill="both", expand=True)
 
-    # Título de la pantalla
+    # El tútulo de la pantalla
     tk.Label(
         contenido,
         text="Crear servidor",
@@ -65,13 +65,13 @@ def crearFrame(ventana, frameMenu):
         fg=util.colorTexto
     ).pack()
 
-    # Subtítulo
+    # Subtítulo de la pantalla
     tk.Label(
         contenido,
         text="Configura y lanza tu servidor TCP",
-        font=(util.fuente, 10),
-        bg="#161b22",
-        fg="#3fb950" # verde para que combine con la barra superior
+        font=(util.fuente, 10), 
+        bg="#161b22", 
+        fg="#3fb950" # verde hola andre
     ).pack(pady=(2, 14))
 
     # Línea separadora
@@ -81,20 +81,22 @@ def crearFrame(ventana, frameMenu):
     campoAnfitrion = util.frameInfo(contenido, "Anfitrión", 15)
     campoPuerto    = util.frameInfo(contenido, "Puerto del servidor", 5)
 
-    # Label para mostrar errores inline sin interrumpir con popups
+    # Label para mostrar errores sin usar dialogs.....
     lbl_error = tk.Label(contenido, text="", font=(util.fuente, 10), bg="#161b22", fg="#f85149", wraplength=400)
     lbl_error.pack(pady=(8, 0))
 
+
     def clickAlojar():
+
+         
         servidor_nombre = campoServidor.get()
         puerto          = campoPuerto.get()
         anfitrion       = campoAnfitrion.get()
 
+        #Valida los campos obligatorios, como el nombre del servidor y el del puerto
         if not servidor_nombre or not puerto:
-
-            #registramos intento incompleto
+            #Guarda el mensaje en la bitácora de sospechosos
             sospechosos.warning("Intento de alojar servidor con campos vacios")
-
             lbl_error.config(text="Nombre del servidor y puerto son obligatorios no te hagas pato")
             return
 
@@ -117,22 +119,22 @@ def crearFrame(ventana, frameMenu):
                     f"Servidor TCP iniciado en puerto {puerto}\n"
                     f"Anfitrión: {anfitrion}"
                 )
-
+            #Cuando el socket no pudo iniciar correctamente en el puerto arroja este error
             except OSError as e:
-
                 #registramos error de puerto
                 errores.error(f"Error puerto {puerto}: {e}")
 
                 if e.errno in (48, 98):
+                    #Muestra el error si el puerto ya se encuentra en uso
                     lbl_error.config(text=f"El puerto {puerto} ya está en uso BRO")
                 else:
+                    #Muestra el error si no se pudo iniciar el servidor
                     lbl_error.config(text=f"No se pudo iniciar el servidor: {e}")
-
+            #Por si ocurre un error inesperado        
             except Exception as e:
-
                 #registramos error inesperado
                 errores.error(str(e))
-
+                #Muestra el error en el label
                 lbl_error.config(text=f"Error inesperado: {e}")
 
             return
